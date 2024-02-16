@@ -21,6 +21,6 @@ static constexpr size_t SOUND_REGISTERS_SIZE = 0x100;       // 256 bytes
 static constexpr size_t TIMER_REGISTERS_SIZE = 0x04;        // 4 bytes
 static constexpr size_t LCD_REGISTERS_SIZE = 0x60;          // 96 bytes
 static constexpr size_t INTERRUPT_REGISTERS_SIZE = 0x04;    // 4 bytes
-
+static constexpr int MBC_TYPE = 0x147;
 
 #endif //CONSTS_H
