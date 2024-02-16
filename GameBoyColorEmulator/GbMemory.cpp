@@ -65,23 +65,35 @@ void GbMemory::writeByte(uint32_t address, uint8_t value) {
     } else if (address < 0xC000) {
         // 8KB External RAM
         mbc->write(address, value);
-    } else if (address < 0xE000) { // 8KB Work RAM
+    } else if (address < 0xE000) {
+        // 8KB Work RAM
         workRam[address - 0xC000] = value;
-    } else if (address < 0xFE00) { // 8KB Work RAM (shadow)
+        // Mirror the write to the echo RAM
+        workRam[address - 0xC000 + 0x2000] = value;
+    } else if (address < 0xFE00) {
+        // 8KB Work RAM (shadow)
         workRam[address - 0xE000] = value;
-    } else if (address < 0xFEA0) { // Sprite attribute table (OAM)
+        // Mirror the write to the original Work RAM
+        workRam[address - 0xE000 - 0x2000] = value;
+    } else if (address < 0xFEA0) {
+        // Sprite attribute table (OAM)
         oam[address - 0xFE00] = value;
-    } else if (address < 0xFF00) { // Not usable
+    } else if (address < 0xFF00) {
+        // Not usable
         // Not writable, do nothing
-    } else if (address < 0xFF80) { // I/O ports
-        if (address == 0xFF00) { // Joypad register
+    } else if (address < 0xFF80) {
+        // I/O ports
+        if (address == 0xFF00) {
+            // Joypad register
             joypadRegister = value;
         } else {
             ioPorts[address - 0xFF00] = value;
         }
-    } else if (address < 0xFFFF) { // High RAM (HRAM)
+    } else if (address < 0xFFFF) {
+        // High RAM (HRAM)
         hram[address - 0xFF80] = value;
-    } else { // Interrupt Enable register
+    } else {
+        // Interrupt Enable register
         interruptEnable = value;
     }
 }
@@ -101,7 +113,7 @@ void GbMemory::writeWord(uint16_t address, uint16_t value) {
 GbMemory::GbMemory() {}
 
 // todo: this needs to become part of a rom class
-std::vector<uint8_t> createRam(const std::vector<uint8_t>& romData) {
+std::vector<uint8_t> createRam(const std::vector<uint8_t> &romData) {
     uint8_t ramSizeByte = romData[0x149];
     size_t ramSize;
 
@@ -132,7 +144,7 @@ std::vector<uint8_t> createRam(const std::vector<uint8_t>& romData) {
 }
 
 // todo: this needs to become part of a rom class
-std::unique_ptr<IMBC> createMBC(const std::vector<uint8_t>& romData) {
+std::unique_ptr<IMBC> createMBC(const std::vector<uint8_t> &romData) {
     uint8_t mbcType = romData[0x147];
     std::vector<uint8_t> ramData = createRam(romData);
 
