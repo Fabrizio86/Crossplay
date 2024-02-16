@@ -2135,8 +2135,7 @@ GbCpu::GbCpu(IMemory *memory, InterruptController *ic, ISR *isr) :
                 this->flags.carry = temp > 0xFF;
             }
             },
-            {
-                    Instruction::RST_38H,     [this]() {
+            {       Instruction::RST_38H,     [this]() {
                 // Decrement the stack pointer (assuming the stack grows downward)
                 this->registers.regSP -= 2;
 

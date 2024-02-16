@@ -110,7 +110,18 @@ void GbMemory::writeWord(uint16_t address, uint16_t value) {
     writeByte(address + 1, value & 0xFF);
 }
 
-GbMemory::GbMemory() {}
+GbMemory::GbMemory() {
+    // Initialize memory arrays
+    memset(videoRam, 0, 0x2000);
+    memset(workRam, 0, 0x2000);
+    memset(oam, 0, 0xA0);
+    memset(ioPorts, 0, 0x80);
+    memset(hram, 0, 0x7F);
+
+    // Initialize other member variables
+    joypadRegister = 0;
+    interruptEnable = 0;
+}
 
 // todo: this needs to become part of a rom class
 std::vector<uint8_t> createRam(const std::vector<uint8_t> &romData) {

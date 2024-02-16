@@ -33,7 +33,6 @@ private:
     std::unique_ptr<IMBC> mbc; // The memory bank controller
 
     uint8_t videoRam[0x2000];
-    uint8_t externalRam[0x2000 * 4];  // Support for up to 4 RAM banks
     uint8_t workRam[0x2000];
     uint8_t oam[0xA0];
     uint8_t ioPorts[0x80];
