@@ -8,6 +8,7 @@ add_library(Interfaces INTERFACE
         IInputDevice.h
         IApu.h
         IStorage.h
+        IMemoryBankController.h
 )
 
 target_include_directories(Interfaces INTERFACE

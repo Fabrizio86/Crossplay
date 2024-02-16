@@ -5,26 +5,20 @@
 
 #include "GbMemory.h"
 #include "Consts.h"
+#include "MBC/MBC1.h"
 
 #include <fstream>
 
 uint8_t GbMemory::read(uint32_t address) const {
-    if (address < 0x4000) {
-        // 16KB ROM bank 00
-        return romBank00[address];
-    } else if (address < 0x8000) {
-        // 16KB ROM bank 01~NN
-        return romBanks[currentRomBank * ROM_BANK_SIZE + (address - 0x4000)];
+    if (address < 0x8000) {
+        // ROM bank 00~NN
+        return mbc->read(address);
     } else if (address < 0xA000) {
         // 8KB Video RAM
         return videoRam[address - 0x8000];
     } else if (address < 0xC000) {
         // 8KB External RAM
-        if (ramEnabled) {
-            return externalRam[currentRamBank * RAM_BANK_SIZE + (address - 0xA000)];
-        } else {
-            return 0xFF;  // Accessing disabled RAM returns 0xFF
-        }
+        return mbc->read(address);
     } else if (address < 0xE000) {
         // 8KB Work RAM
         return workRam[address - 0xC000];
@@ -36,7 +30,7 @@ uint8_t GbMemory::read(uint32_t address) const {
         return oam[address - 0xFE00];
     } else if (address < 0xFF00) {
         // Not usable
-        return 0;
+        return 0xff;
     } else if (address < 0xFF80) {
         // I/O ports
         if (address == 0xFF00) {
@@ -56,23 +50,32 @@ uint8_t GbMemory::read(uint32_t address) const {
 
 void GbMemory::writeByte(uint32_t address, uint8_t value) {
     if (address < 0x8000) {
-        // Write to ROM bank - typically ignored on Game Boy
-    } else if (address >= 0xA000 && address < 0xC000) {
-        cartridgeRAM[address - 0xA000] = value; // Write to cartridge RAM
-    } else if (address >= 0xC000 && address < 0xE000) {
-        internalRam[address - 0xC000] = value; // Write to internal RAM
-    } else if (address >= 0xE000 && address < 0xFE00) {
-        internalRam[address - 0xE000] = value; // Write to echo RAM
-    } else if (address >= 0xFE00 && address < 0xFEA0) {
-        ioRegisters[address - 0xFE00] = value; // Write to I/O registers
-    } else if (address >= 0xFF00 && address < 0xFF80) {
-        // Implement logic for writing to memory-mapped I/O registers
-    } else if (address >= 0xFF80 && address < 0xFFFF) {
-        hRAM[address - 0xFF80] = value; // Write to HRAM
-    } else if (address == 0xFFFF) {
-        interruptRegisters[address - 0xFFFF] = value; // Write to interrupt registers
-    } else {
-        // Implement logic for other memory regions
+        // ROM bank 00~NN
+        mbc->write(address, value);
+    } else if (address < 0xA000) {
+        // 8KB Video RAM
+        videoRam[address - 0x8000] = value;
+    } else if (address < 0xC000) {
+        // 8KB External RAM
+        mbc->write(address, value);
+    } else if (address < 0xE000) { // 8KB Work RAM
+        workRam[address - 0xC000] = value;
+    } else if (address < 0xFE00) { // 8KB Work RAM (shadow)
+        workRam[address - 0xE000] = value;
+    } else if (address < 0xFEA0) { // Sprite attribute table (OAM)
+        oam[address - 0xFE00] = value;
+    } else if (address < 0xFF00) { // Not usable
+        // Not writable, do nothing
+    } else if (address < 0xFF80) { // I/O ports
+        if (address == 0xFF00) { // Joypad register
+            joypadRegister = value;
+        } else {
+            ioPorts[address - 0xFF00] = value;
+        }
+    } else if (address < 0xFFFF) { // High RAM (HRAM)
+        hram[address - 0xFF80] = value;
+    } else { // Interrupt Enable register
+        interruptEnable = value;
     }
 }
 
@@ -90,21 +93,6 @@ void GbMemory::writeWord(uint16_t address, uint16_t value) {
 
 GbMemory::GbMemory() {}
 
-void GbMemory::loadRom(std::string path) {
-    std::ifstream rom_file(path, std::ios::binary | std::ios::ate);
-    if (!rom_file.is_open()) {
-        throw std::runtime_error("Failed to open ROM file.");
-    }
-
-    size_t size = rom_file.tellg();
-    if (size > ROM_SIZE) {
-        throw std::runtime_error("ROM file size exceeds maximum allowed size.");
-    }
-
-    rom_file.seekg(0, std::ios::beg);
-    std::vector<uint8_t> rom_data(size);
-    rom_file.read(reinterpret_cast<char *>(rom_data.data()), size);
-    rom_file.close();
-
-    std::copy(rom_data.begin(), rom_data.end(), memory + INITIAL_ROM_ADDRESS);
+void GbMemory::loadRom(const std::vector<uint8_t> &romData, size_t ramSize) {
+    mbc = std::make_unique<MBC1>(romData, ramSize);
 }

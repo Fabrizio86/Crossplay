@@ -8,6 +8,7 @@
 
 #include "../Interfaces/IMemory.h"
 #include "../Definitions.h"
+#include "../Interfaces/IMemoryBankController.h"
 
 #include <string>
 
@@ -26,9 +27,11 @@ public:
 
     void writeWord(uint16_t address, uint16_t value) override;
 
-    void loadRom(std::string path);
+    void loadRom(const std::vector<uint8_t>& romData, size_t ramSize);
 
 private:
+    std::unique_ptr<IMemoryBankController> mbc; // The memory bank controller
+
     // Memory regions
     uint8_t romBank00[0x4000];
     uint8_t romBanks[0x4000 * 128];  // Support for up to 128 ROM banks

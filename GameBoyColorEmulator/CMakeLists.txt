@@ -16,6 +16,8 @@ set(SOURCE_FILES
         GbMemory.h
         Consts.h
         Button.h
+        MBC/MBC1.cpp
+        MBC/MBC1.h
 )
 
 # Create the library
