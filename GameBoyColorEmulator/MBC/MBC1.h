@@ -10,7 +10,7 @@
 
 class MBC1 : public IMemoryBankController {
 public:
-    MBC1(const std::vector<uint8_t>& romData, size_t ramSize);
+    MBC1(const std::vector<uint8_t>& romData, const std::vector<uint8_t> &ramData);
 
     uint8_t read(uint16_t address) override;
 
