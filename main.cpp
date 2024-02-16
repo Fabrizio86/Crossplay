@@ -13,7 +13,7 @@ int main()
     ICpu* cpu = new GbCpu(memory, &ic, &isr);
     Clock clock(4.20, cpu);
 
-    memory->loadRom("/Users/fabriziopaino/CrossPlay/Pokemon Red.gb");
+    memory->loadRom("/Users/fabriziopaino/CrossPlay/PR.gb");
 
     clock.start();
 
