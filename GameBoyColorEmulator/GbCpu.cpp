@@ -1663,7 +1663,11 @@ GbCpu::GbCpu(IMemory *memory, InterruptController *ic, ISR *isr) :
 
             {
                     Instruction::JP_nn,       [this]() {
+                // Read the 16-bit address from memory at the location of the program counter
                 uint16_t address = this->memory->readWord(this->registers.regPC);
+                this->registers.regPC += 2;
+
+                // Set the program counter to the read address, effectively jumping to that address
                 this->registers.regPC = address;
             }
             },
@@ -2136,11 +2140,8 @@ GbCpu::GbCpu(IMemory *memory, InterruptController *ic, ISR *isr) :
             }
             },
             {       Instruction::RST_38H,     [this]() {
-                // Decrement the stack pointer (assuming the stack grows downward)
+                this->memory->writeWord(this->registers.regSP - 2, this->registers.regPC);
                 this->registers.regSP -= 2;
-
-                // Write the value to the memory location pointed to by the stack pointer
-                this->memory->writeWord(this->registers.regSP, this->registers.regPC);
 
                 this->registers.regPC = 0x38;
             }
