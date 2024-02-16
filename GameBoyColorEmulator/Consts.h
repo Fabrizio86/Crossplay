@@ -7,7 +7,7 @@
 
 #include <cstdint>
 
-constexpr uint32_t INITIAL_ROM_ADDRESS = 0x08000000;
+constexpr uint16_t INITIAL_ROM_ADDRESS = 0x0100;
 
 static constexpr size_t ROM_BANK_SIZE = 16 * 1024;          // 16 KB
 static constexpr size_t RAM_BANK_SIZE = 8 * 1024;           // 8 KB

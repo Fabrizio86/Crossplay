@@ -6,6 +6,13 @@
 #include "GbMemory.h"
 #include "Consts.h"
 #include "MBC/MBC1.h"
+#include "MBC/NoMBC.h"
+#include "MBC/mbc2.h"
+#include "MBC/MBC3.h"
+#include "MBC/MBC4.h"
+#include "MBC/MBC5.h"
+#include "MBC/MBC6.h"
+#include "MBC/MBC7.h"
 
 #include <fstream>
 
@@ -93,6 +100,85 @@ void GbMemory::writeWord(uint16_t address, uint16_t value) {
 
 GbMemory::GbMemory() {}
 
-void GbMemory::loadRom(const std::vector<uint8_t> &romData, size_t ramSize) {
-    mbc = std::make_unique<MBC1>(romData, ramSize);
+// todo: this needs to become part of a rom class
+std::vector<uint8_t> createRam(const std::vector<uint8_t>& romData) {
+    uint8_t ramSizeByte = romData[0x149];
+    size_t ramSize;
+
+    switch (ramSizeByte) {
+        case 0x00:
+            ramSize = 0;
+            break;
+        case 0x01:
+            ramSize = 2 * 1024;
+            break;
+        case 0x02:
+            ramSize = 8 * 1024;
+            break;
+        case 0x03:
+            ramSize = 32 * 1024;
+            break;
+        case 0x04:
+            ramSize = 128 * 1024;
+            break;
+        case 0x05:
+            ramSize = 64 * 1024;
+            break;
+        default:
+            throw std::runtime_error("Unknown RAM size");
+    }
+
+    return std::vector<uint8_t>(ramSize, 0);
+}
+
+// todo: this needs to become part of a rom class
+std::unique_ptr<IMBC> createMBC(const std::vector<uint8_t>& romData) {
+    uint8_t mbcType = romData[0x147];
+    std::vector<uint8_t> ramData = createRam(romData);
+
+    switch (mbcType) {
+        case 0x00:
+            // No MBC, ROM only
+            return std::make_unique<NoMBC>(romData);
+        case 0x01:
+        case 0x02:
+        case 0x03:
+            // MBC1
+            return std::make_unique<MBC1>(romData, ramData);
+        case 0x05:
+        case 0x06:
+            // MBC2
+            return std::make_unique<MBC2>(romData, ramData);
+        case 0x08:
+        case 0x09:
+            // MBC3
+            return std::make_unique<MBC3>(romData, ramData);
+        case 0x0B:
+        case 0x0C:
+        case 0x0D:
+            // MBC4
+            return std::make_unique<MBC4>(romData, ramData);
+        case 0x0F:
+        case 0x10:
+        case 0x11:
+        case 0x12:
+        case 0x13:
+            // MBC5
+            return std::make_unique<MBC5>(romData, ramData);
+        case 0x15:
+        case 0x16:
+            // MBC6
+            return std::make_unique<MBC6>(romData, ramData);
+        case 0x17:
+            // MBC7
+            return std::make_unique<MBC7>(romData, ramData);
+        default:
+            throw std::runtime_error("Unknown MBC type");
+    }
+}
+
+
+void GbMemory::loadRom(const std::vector<uint8_t> &romData) {
+    this->mbc = createMBC(romData);
+
 }

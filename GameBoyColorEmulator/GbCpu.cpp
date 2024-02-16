@@ -15,11 +15,11 @@ void GbCpu::exec()
         this->restoreState();
     }
 
-    auto opcode = this->memory->read(registers.regPC);
+    auto opcode = (Instruction)this->memory->read(registers.regPC);
     registers.regPC++;
 
     // Lookup and execute the opcode handler from the opCodes map
-    auto it = opCodes.find((Instruction)opcode);
+    auto it = opCodes.find(opcode);
     if (it != opCodes.end())
     {
         it->second();
@@ -1883,7 +1883,6 @@ GbCpu::GbCpu(IMemory* memory, InterruptController* ic, ISR* isr) :
             Instruction::JP_nn, [this]()
             {
                 uint16_t address = this->memory->readWord(this->registers.regPC);
-                this->registers.regPC += 2;
                 this->registers.regPC = address;
             }
         },

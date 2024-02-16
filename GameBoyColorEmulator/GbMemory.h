@@ -8,7 +8,7 @@
 
 #include "../Interfaces/IMemory.h"
 #include "../Definitions.h"
-#include "../Interfaces/IMemoryBankController.h"
+#include "../Interfaces/IMBC.h"
 
 #include <string>
 
@@ -27,14 +27,11 @@ public:
 
     void writeWord(uint16_t address, uint16_t value) override;
 
-    void loadRom(const std::vector<uint8_t>& romData, size_t ramSize);
+    void loadRom(const std::vector<uint8_t>& romData);
 
 private:
-    std::unique_ptr<IMemoryBankController> mbc; // The memory bank controller
+    std::unique_ptr<IMBC> mbc; // The memory bank controller
 
-    // Memory regions
-    uint8_t romBank00[0x4000];
-    uint8_t romBanks[0x4000 * 128];  // Support for up to 128 ROM banks
     uint8_t videoRam[0x2000];
     uint8_t externalRam[0x2000 * 4];  // Support for up to 4 RAM banks
     uint8_t workRam[0x2000];
@@ -43,9 +40,6 @@ private:
     uint8_t hram[0x7F];
     uint8_t interruptEnable;
 
-    // MBC state
-    uint8_t currentRomBank;
-    uint8_t currentRamBank;
     bool ramEnabled;
 
     // I/O state

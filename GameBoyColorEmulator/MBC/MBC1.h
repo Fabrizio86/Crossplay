@@ -6,9 +6,9 @@
 #define CROSSPLAY_MBC1_H
 
 #include <vector>
-#include "../../Interfaces/IMemoryBankController.h"
+#include "../../Interfaces/IMBC.h"
 
-class MBC1 : public IMemoryBankController {
+class MBC1 : public IMBC {
 public:
     MBC1(const std::vector<uint8_t>& romData, const std::vector<uint8_t> &ramData);
 
