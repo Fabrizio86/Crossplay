@@ -18,7 +18,7 @@ public:
     void write(uint16_t address, uint8_t data);
 
 private:
-    // ROM and RAM data
+    // ROM and RAM frameBuffer
     std::vector<uint8_t> rom;
     std::vector<uint8_t> ram;
 

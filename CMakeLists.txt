@@ -1,6 +1,12 @@
 cmake_minimum_required(VERSION 3.27)
 project(CrossPlay)
 
+# Replace with the actual path to SFML
+set(SFML_DIR "/opt/homebrew/opt/sfml")
+
+# Find SFML package
+find_package(SFML 2.5 COMPONENTS graphics window system REQUIRED)
+
 set(CMAKE_CXX_STANDARD 23)
 
 # Add subdirectories for each project
@@ -14,4 +20,6 @@ add_executable(CrossPlay main.cpp
         Clock.h
         Definitions.h)
 
-target_link_libraries(CrossPlay Interfaces GameBoyColorEmulator)
+target_link_libraries(CrossPlay Interfaces GameBoyColorEmulator sfml-graphics sfml-window sfml-system)
+
+target_include_directories(CrossPlay PRIVATE ${SFML_INCLUDE_DIR})

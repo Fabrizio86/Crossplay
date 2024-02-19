@@ -26,7 +26,7 @@ uint8_t MBC5::read(uint16_t address) {
 
 void MBC5::write(uint16_t address, uint8_t data) {
     if (address < 0x2000) {
-        ramEnabled = (data & 0x0F) == 0x0A; // Enable/disable RAM based on lower 4 bits of data
+        ramEnabled = (data & 0x0F) == 0x0A; // Enable/disable RAM based on lower 4 bits of frameBuffer
     } else if (address >= 0x2000 && address < 0x3000) {
         romBank = (romBank & 0x100) | data; // Set lower 8 bits of ROM bank number
     } else if (address >= 0x3000 && address < 0x4000) {

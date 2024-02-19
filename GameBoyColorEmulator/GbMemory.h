@@ -9,11 +9,11 @@
 #include "../Interfaces/IMemory.h"
 #include "../Definitions.h"
 #include "../Interfaces/IMBC.h"
+#include "Consts.h"
 
 #include <string>
 
-class GbMemory final : public IMemory
-{
+class GbMemory final : public IMemory {
 public:
     GbMemory();
 
@@ -27,19 +27,29 @@ public:
 
     void writeWord(uint16_t address, uint16_t value) override;
 
-    void loadRom(const std::vector<uint8_t>& romData);
+    void loadRom(const std::vector<uint8_t> &romData);
+
+    const uint8_t *getVideoRam() const;
+
+    const uint8_t *getOam() const;
+
+    const uint8_t *getBgPalette() const;
+
+    const uint8_t *getSpritePalette() const;
 
 private:
     std::unique_ptr<IMBC> mbc; // The memory bank controller
 
-    uint8_t videoRam[0x2000];
-    uint8_t workRam[0x2000];
-    uint8_t oam[0xA0];
-    uint8_t ioPorts[0x80];
-    uint8_t hram[0x7F];
+    uint8_t videoRam[CARTRIDGE_RAM_SIZE];
+    uint8_t workRam[CARTRIDGE_RAM_SIZE];
+    uint8_t oam[OAM_SIZE];
+    uint8_t ioPorts[IO_REGISTER_SIZE];
+    uint8_t hram[HRAM_SIZE];
     uint8_t interruptEnable;
 
     bool ramEnabled;
+
+    void loadPaletteData(const std::vector<uint8_t> &romData);
 
     // I/O state
     uint8_t joypadRegister = 0xFF;  // Joypad register, stored at address 0xFF00

@@ -77,7 +77,7 @@ void MBC3::write(uint16_t address, uint8_t data)
     }
     else if (address < 0x8000)
     {
-        // Latch clock data
+        // Latch clock frameBuffer
         if (data == 0x01)
         {
             latchClockData();

@@ -161,7 +161,7 @@ std::unique_ptr<IMBC> createMBC(const std::vector<uint8_t> &romData) {
 
     switch (mbcType) {
         case 0x00:
-            // No MBC, ROM only
+            // ROM ONLY
             return std::make_unique<NoMBC>(romData);
         case 0x01:
         case 0x02:
@@ -172,29 +172,45 @@ std::unique_ptr<IMBC> createMBC(const std::vector<uint8_t> &romData) {
         case 0x06:
             // MBC2
             return std::make_unique<MBC2>(romData, ramData);
-        case 0x08:
-        case 0x09:
-            // MBC3
-            return std::make_unique<MBC3>(romData, ramData);
         case 0x0B:
         case 0x0C:
         case 0x0D:
-            // MBC4
-            return std::make_unique<MBC4>(romData, ramData);
+            // MMM01
+            //return std::make_unique<MMM01>(romData, ramData);
+            throw std::runtime_error("Unknown MBC type");
         case 0x0F:
         case 0x10:
         case 0x11:
         case 0x12:
         case 0x13:
+            // MBC3
+            return std::make_unique<MBC3>(romData, ramData);
+        case 0x19:
+        case 0x1A:
+        case 0x1B:
+        case 0x1C:
+        case 0x1D:
+        case 0x1E:
             // MBC5
             return std::make_unique<MBC5>(romData, ramData);
-        case 0x15:
-        case 0x16:
+        case 0x20:
             // MBC6
             return std::make_unique<MBC6>(romData, ramData);
-        case 0x17:
+        case 0x22:
             // MBC7
             return std::make_unique<MBC7>(romData, ramData);
+        case 0xFC:
+            // POCKET CAMERA
+            //return std::make_unique<PocketCamera>(romData, ramData);
+        case 0xFD:
+            // BANDAI TAMA5
+            //return std::make_unique<BandaiTama5>(romData, ramData);
+        case 0xFE:
+            // HuC3
+            //return std::make_unique<HuC3>(romData, ramData);
+        case 0xFF:
+            // HuC1+RAM+BATTERY
+            //return std::make_unique<HuC1>(romData, ramData);
         default:
             throw std::runtime_error("Unknown MBC type");
     }
@@ -203,5 +219,34 @@ std::unique_ptr<IMBC> createMBC(const std::vector<uint8_t> &romData) {
 
 void GbMemory::loadRom(const std::vector<uint8_t> &romData) {
     this->mbc = createMBC(romData);
+    this->loadPaletteData(romData);
+}
 
+const uint8_t *GbMemory::getVideoRam() const {
+    return videoRam;
+}
+
+const uint8_t *GbMemory::getOam() const {
+    return oam;
+}
+
+const uint8_t *GbMemory::getBgPalette() const {
+    return &ioPorts[0x68];
+}
+
+const uint8_t *GbMemory::getSpritePalette() const {
+    return &ioPorts[0x6C];
+}
+
+void GbMemory::loadPaletteData(const std::vector<uint8_t> &romData) {
+    // Check if ROM data has the required size to hold palette information
+    if (romData.size() < 0x6C) {
+        throw std::runtime_error("ROM data does not contain palette information");
+    }
+
+    // Load background palette data
+    std::copy(romData.begin() + 0x68, romData.begin() + 0x6C, ioPorts + 0x68);
+
+    // Load sprite palette data
+    std::copy(romData.begin() + 0x6C, romData.begin() + 0x70, ioPorts + 0x6C);
 }

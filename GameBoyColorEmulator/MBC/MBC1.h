@@ -17,8 +17,8 @@ public:
     void write(uint16_t address, uint8_t data) override;
 
 private:
-    std::vector<uint8_t> rom; // The entire ROM data
-    std::vector<uint8_t> ram; // The RAM data
+    std::vector<uint8_t> rom; // The entire ROM frameBuffer
+    std::vector<uint8_t> ram; // The RAM frameBuffer
     uint8_t currentRomBank; // The currently selected ROM bank
     uint8_t currentRamBank; // The currently selected RAM bank
     bool romBankingMode; // The current mode (true for ROM banking mode, false for RAM banking mode)
