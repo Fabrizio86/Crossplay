@@ -8,12 +8,13 @@
 
 enum class InterruptType {
     VBlank = 0,
-    LCD_STAT,
-    TimerOverflow,
-    SerialTransferComplete,
-    ButtonPress,
-    Unused,
-    DI
+    LCD_STAT = 1,
+    TimerOverflow = 2,
+    SerialTransferComplete = 3,
+    ButtonPress = 4,
+    Unused = 5,
+    DI = 6,
+    DMA = 7
 };
 
 #endif //CROSSPLAY_INTERRUPTTYPE_H

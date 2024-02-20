@@ -16,16 +16,34 @@ void Clock::start() {
 
     thread clkT([this]() {
         while (this->running) {
+            std::unique_lock<std::mutex> lock(m);
+            cv.wait(lock);
+
             this->cpu->exec();
-            std::this_thread::sleep_for(std::chrono::microseconds(this->freq));
 
         }
     });
 
+    thread plkT([this]() {
+        while (this->running) {
+            std::unique_lock<std::mutex> lock(m);
+            cv.wait(lock);
+
+            this->ppu->exec();
+        }
+    });
+
     clkT.detach();
+    plkT.detach();
+
+    while (this->running){
+        std::this_thread::sleep_for(std::chrono::microseconds(this->freq));
+        std::lock_guard<std::mutex> lock(m);
+        cv.notify_all();
+    }
 }
 
-Clock::Clock(double freqMHz, ICpu *cpu) : cpu(cpu) {
+Clock::Clock(double freqMHz, ICpu *cpu, IPPU *ppu) : cpu(cpu), ppu(ppu) {
     this->freq = static_cast<unsigned int>(1.0 / freqMHz * MICROSECONDS_IN_SECOND);
 }
 

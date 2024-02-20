@@ -5,11 +5,13 @@
 #ifndef CROSSPLAY_PPU_H
 #define CROSSPLAY_PPU_H
 
+#include <vector>
 
 #include "../Interfaces/IMemory.h"
 #include "InterruptController.h"
+#include "../Interfaces/IPPU.h"
 
-class PPU {
+class PPU : public IPPU {
 public:
     PPU(IMemory *memory, InterruptController *controller);
 
@@ -31,6 +33,8 @@ private:
 
     InterruptController *controller;
 
+    std::vector<uint8_t> screenBuffer;
+
     // Define methods for different PPU phases
     void hBlank();
 
@@ -48,6 +52,12 @@ private:
     void backgroundProcessing();
 
     void synchronizeWithOtherComponents();
+
+    void renderPixel(uint8_t tileData, int tilePixelX, int tilePixelY, int screenX, int screenY);
+
+    uint8_t getColorFromPalette(int index);
+
+    void renderSprites();
 };
 
 

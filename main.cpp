@@ -2,10 +2,11 @@
 #include "Hardware.h"
 #include "GameBoyColorEmulator/GbCpu.h"
 #include "GameBoyColorEmulator/GbMemory.h"
+#include "GameBoyColorEmulator/PPU.h"
 #include <fstream>
 #include <vector>
 
-void loadGbcRom(const std::string& filePath, GbMemory* memory) {
+void loadGbcRom(const std::string &filePath, GbMemory *memory) {
     std::ifstream romFile(filePath, std::ios::binary);
     if (!romFile.is_open()) {
         // Handle error: unable to open file
@@ -19,22 +20,22 @@ void loadGbcRom(const std::string& filePath, GbMemory* memory) {
 
     // Read ROM data into a vector
     std::vector<uint8_t> romData(fileSize);
-    romFile.read(reinterpret_cast<char*>(romData.data()), fileSize);
+    romFile.read(reinterpret_cast<char *>(romData.data()), fileSize);
     romFile.close();
 
     // Pass the ROM data to the memory object
     memory->loadRom(romData);
 }
 
-int main()
-{
-    Hardware* hardware;
-    auto* memory = new GbMemory();
+int main() {
+    Hardware *hardware;
+    auto *memory = new GbMemory();
     InterruptController ic;
     InterruptVectorTable ivt;
     ISR isr(&ic, &ivt);
-    ICpu* cpu = new GbCpu(memory, &ic, &isr);
-    Clock clock(4.20, cpu);
+    ICpu *cpu = new GbCpu(memory, &ic, &isr);
+    IPPU *ppu = new PPU(memory, &ic);
+    Clock clock(4.20, cpu, ppu);
 
     loadGbcRom("/Users/fabriziopaino/CrossPlay/PR.gb", memory);
 

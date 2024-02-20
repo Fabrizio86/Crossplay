@@ -16,6 +16,7 @@ InterruptController::InterruptController()
         {InterruptType::ButtonPress, false}, // Input (button press) interrupt
         {InterruptType::Unused, false}, // Unused (reserved) interrupt
         {InterruptType::DI, false}, // Used for Disable/Enable Interrupts
+        {InterruptType::DMA, false},
     };
 }
 

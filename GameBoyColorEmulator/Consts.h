@@ -33,7 +33,12 @@ static constexpr int ACTIVE_RENDER_CYCLES = 70224; // Number of cycles in active
 static constexpr int FRAME_CYCLES = ACTIVE_RENDER_CYCLES + V_BLANK_CYCLES; // Total number of cycles in one frame
 
 static constexpr int SCANLINE_WIDTH = 160;
-static constexpr int NUM_SCANLINES_PER_FRAME = 144;
+static constexpr int SCANLINE_HEIGHT = 144;
+static constexpr int TILE_DIMENSION = 8;
+static constexpr int NUM_TILES_PER_ROW = SCANLINE_WIDTH / TILE_DIMENSION;
+
+static constexpr int WINDOW_X = 0; // Window X position on the screen
+static constexpr int WINDOW_Y = 0; // Window Y position on the screen
 
 // Define display mode constants
 static constexpr uint8_t DISPLAY_MODE_VBLANK = 0x01; // Value indicating V-Blank mode
@@ -41,7 +46,20 @@ static constexpr uint8_t DISPLAY_MODE_HBLANK = 0x00; // Value indicating H-Blank
 
 // Define interrupt flag constants
 static constexpr uint8_t INT_FLAG_VBLANK = 0x01; // Value indicating V-Blank interrupt flag
-constexpr uint16_t REG_IE_ADDRESS = 0xFFFF;
-constexpr uint8_t INT_VBLANK_ENABLE = 0x01;
+static constexpr uint16_t REG_IE_ADDRESS = 0xFFFF;
+static constexpr uint8_t INT_VBLANK_ENABLE = 0x01;
+static constexpr uint16_t DMA_SOURCE_ADDRESS = 0x8000; // Example static address for DMA transfer source
+static constexpr uint16_t WINDOW_TILE_MAP_ADDRESS = 0x9800; // Example address for window tile map
+
+// Define the number of colors in the palette
+static const int PALETTE_SIZE = 4;
+
+// Define the palette colors (example colors for the Game Boy Color)
+static const uint32_t palette[PALETTE_SIZE] = {
+        0xFF686868, // Color 0: Dark gray
+        0xFFA8A8A8, // Color 1: Light gray
+        0xFF101010, // Color 2: Black
+        0xFFFFFFFF  // Color 3: White
+};
 
 #endif //CONSTS_H
