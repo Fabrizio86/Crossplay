@@ -70,14 +70,14 @@ void GbMemory::writeByte(uint32_t address, uint8_t value) {
         workRam[address - 0xC000] = value;
         // Mirror the write to the echo RAM
         workRam[address - 0xC000 + 0x2000] = value;
-    } else if (address < 0xFE00) {
+    } else if (address < OAM_ADDR) {
         // 8KB Work RAM (shadow)
         workRam[address - 0xE000] = value;
         // Mirror the write to the original Work RAM
         workRam[address - 0xE000 - 0x2000] = value;
     } else if (address < 0xFEA0) {
         // Sprite attribute table (OAM)
-        oam[address - 0xFE00] = value;
+        oam[address - OAM_ADDR] = value;
     } else if (address < 0xFF00) {
         // Not usable
         // Not writable, do nothing
@@ -220,22 +220,6 @@ std::unique_ptr<IMBC> createMBC(const std::vector<uint8_t> &romData) {
 void GbMemory::loadRom(const std::vector<uint8_t> &romData) {
     this->mbc = createMBC(romData);
     this->loadPaletteData(romData);
-}
-
-const uint8_t *GbMemory::getVideoRam() const {
-    return videoRam;
-}
-
-const uint8_t *GbMemory::getOam() const {
-    return oam;
-}
-
-const uint8_t *GbMemory::getBgPalette() const {
-    return &ioPorts[0x68];
-}
-
-const uint8_t *GbMemory::getSpritePalette() const {
-    return &ioPorts[0x6C];
 }
 
 void GbMemory::loadPaletteData(const std::vector<uint8_t> &romData) {

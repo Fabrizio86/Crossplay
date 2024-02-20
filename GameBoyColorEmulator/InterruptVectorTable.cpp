@@ -9,6 +9,7 @@ ISRFunctionPtr InterruptVectorTable::getInterruptHandler(InterruptType interrupt
     return this->interruptHandlers.at(interruptType);
 }
 
+// todo: need to implement these
 InterruptVectorTable::InterruptVectorTable() {
     this->interruptHandlers[InterruptType::VBlank] = []() {};
     this->interruptHandlers[InterruptType::LCD_STAT] = []() {};

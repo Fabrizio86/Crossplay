@@ -34,6 +34,8 @@ set(SOURCE_FILES
         MBC/MBC7.h
         MBC/CartridgeHeader.cpp
         MBC/CartridgeHeader.h
+        PPU.cpp
+        PPU.h
 )
 
 # Create the library
