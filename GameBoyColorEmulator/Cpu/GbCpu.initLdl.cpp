@@ -40,4 +40,36 @@ void GbCpu::initLdl() {
         uint8_t immediateValue = this->memory->read(this->registers.regPC++);
         this->registers.regL = immediateValue;
     };
+
+    this->opCodes[Instruction::LD_nn_SP] = [this]() {
+        uint16_t address = this->memory->readWord(this->registers.regPC);
+        this->registers.regPC += 2;
+        this->memory->writeWord(address, this->registers.regSP);
+    };
+
+    this->opCodes[Instruction::LD_SP_nn] = [this]() {
+        uint16_t nn = this->memory->readWord(this->registers.regPC);
+        this->registers.regSP = nn;
+        this->registers.regPC += 2;
+    };
+
+    this->opCodes[Instruction::LD_nn_A] = [this]() {
+        uint16_t address = this->memory->readWord(this->registers.regPC);
+        this->registers.regPC += 2;
+        this->memory->writeByte(address, this->registers.regA);
+    };
+
+    this->opCodes[Instruction::LD_SP_HL] = [this]() {
+        this->registers.regSP = (this->registers.regH << 8) | this->registers.regL;
+    };
+
+    this->opCodes[Instruction::LDH_A_n] = [this]() {
+        uint8_t n = this->memory->read(this->registers.regPC++);
+        this->registers.regA = this->memory->read(0xFF00 + n);
+    };
+
+    this->opCodes[Instruction::LDH_n_A] = [this]() {
+        uint8_t n = this->memory->read(this->registers.regPC++);
+        this->memory->writeByte(0xFF00 + n, this->registers.regA);
+    };
 }

@@ -4,15 +4,21 @@
 //
 
 #include "GbCpu.h"
-#include "../Instruction.h"
+#include "../StopCpuException.h"
+
+#include <iostream>
 
 void GbCpu::exec() {
-    if (this->interruptEnabled) {
-        if (this->interruptController->isInterruptRequests()) {
-            this->saveState();
-            this->isr->handleInterrupt();
-            this->restoreState();
-        }
+    if (this->halted)
+        return;
+
+    if (this->stopped)
+        throw StopCPUException();
+
+    if (this->interruptEnabled && this->interruptController->isInterruptRequests()) {
+        this->saveState();
+        this->isr->handleInterrupt();
+        this->restoreState();
     }
 
     opcode = (Instruction) this->memory->read(registers.regPC);
@@ -54,6 +60,10 @@ GbCpu::GbCpu(IMemory *memory, InterruptController *ic, ISR *isr) :
 
     this->reset();
 
+    for (int i = 1; i < 256; ++i) {
+        this->opCodes[i] = [i]() { std::cout << "not implemented, opt code: " << i << std::endl; };
+    }
+
     this->initXor();
     this->initRst();
     this->initLdb();
@@ -67,82 +77,15 @@ GbCpu::GbCpu(IMemory *memory, InterruptController *ic, ISR *isr) :
     this->initLdl();
     this->initAdd();
     this->initAnd();
+    this->initSub();
+    this->initR();
+    this->initJ();
 
     this->opCodes[Instruction::NOP] = []() {};
 
-    this->opCodes[Instruction::RLCA] = [this]() {
-        // RLCA - Rotate A left, old bit 7 to carry flag
-        bool carry = (this->registers.regA & 0x80) != 0;
-        this->registers.regA = (this->registers.regA << 1) | carry;
-        this->flags.zero = false; // Clear zero flag
-        this->flags.subtract = false; // Clear subtract flag
-        this->flags.halfCarry = false; // Clear half carry flag
-        this->flags.carry = carry; // Set carry flag
-    };
-
-    this->opCodes[Instruction::LD_nn_SP] = [this]() {
-        // LD (nn),SP - Store Stack Pointer at address n
-        uint16_t address = this->memory->readWord(this->registers.regPC);
-        this->registers.regPC += 2; // Increment PC by 2 bytes
-        this->memory->writeWord(address, this->registers.regSP);
-    };
-
-
-    this->opCodes[Instruction::RRCA] = [this]() {
-        this->flags.carry = this->registers.regA & 0x01;
-        this->registers.regA = (this->registers.regA >> 1) | (this->flags.carry << 7);
-        this->flags.zero = false;
-        this->flags.subtract = false;
-        this->flags.halfCarry = false;
-        this->registers.regPC++;
-    };
-
     this->opCodes[Instruction::STOP] = [this]() {
-        // Implement STOP instruction
-        // This instruction halts the CPU and LCD controller until the next interrupt
-        this->stopped = true; // Set CPU stopped flag
+        this->stopped = true;
     };
-
-    this->opCodes[Instruction::RLA] = [this]() {
-        // Implement RLA instruction
-        // Rotate A register left through carry flag
-        bool carry = (this->registers.regA & 0x80) != 0;
-        this->registers.regA = (this->registers.regA << 1) | (this->flags.carry ? 1 : 0);
-        this->flags.zero = false;
-        this->flags.subtract = false;
-        this->flags.halfCarry = false;
-        this->flags.carry = carry;
-    };
-
-    this->opCodes[Instruction::JR_NC_e] = [this]() {
-        // Implement JR NC,e instruction
-        // Jump relative to PC if carry flag is not set
-        int8_t displacement = static_cast<int8_t>(this->memory->read(this->registers.regPC++));
-        if (!this->flags.carry) {
-            this->registers.regPC += displacement;
-        }
-    };
-
-
-    this->opCodes[Instruction::RRA] = [this]() {
-        // RRA - Rotate A right through carry flag
-        bool carry = (this->registers.regA & 0x01) != 0;
-        this->registers.regA = (this->registers.regA >> 1) | (this->flags.carry ? 0x80 : 0x00);
-        this->flags.zero = false; // Clear zero flag
-        this->flags.subtract = false; // Clear subtract flag
-        this->flags.halfCarry = false; // Clear half carry flag
-        this->flags.carry = carry; // Set carry flag
-    };
-
-    this->opCodes[Instruction::JR_NZ_n] = [this]() {
-        // Implement JR NZ,n instruction
-        // Jump relative to PC if zero flag is not set
-        int8_t displacement = static_cast<int8_t>(this->memory->read(this->registers.regPC++));
-        if (!this->flags.zero) {
-            this->registers.regPC += displacement;
-        }
-    };
-
     this->opCodes[Instruction::DAA] = [this]() {
         // Implement DAA instruction
         // Decimal adjust accumulator
@@ -159,38 +102,12 @@ GbCpu::GbCpu(IMemory *memory, InterruptController *ic, ISR *isr) :
         this->flags.halfCarry = false;
     };
 
-    this->opCodes[Instruction::JR_Z_n] = [this]() {
-        // Implement JR Z,n instruction
-        // Jump relative to PC if zero flag is set
-        int8_t displacement = static_cast<int8_t>(this->memory->read(this->registers.regPC++));
-        if (this->flags.zero) {
-            this->registers.regPC += displacement;
-        }
-    };
-
     this->opCodes[Instruction::CPL] = [this]() {
         // Implement CPL instruction
         // Complement A register (flip all bits)
         this->registers.regA = ~this->registers.regA;
         this->flags.subtract = true;
         this->flags.halfCarry = true;
-    };
-
-    this->opCodes[Instruction::JR_NC_n] = [this]() {
-        // Implement JR NC,n instruction
-        // Jump relative to PC if carry flag is not set
-        int8_t displacement = static_cast<int8_t>(this->memory->read(this->registers.regPC++));
-        if (!this->flags.carry) {
-            this->registers.regPC += displacement;
-        }
-    };
-
-    this->opCodes[Instruction::LD_SP_nn] = [this]() {
-        // Implement LD SP, nn instruction
-        // Load 16-bit immediate value into SP register
-        uint16_t nn = this->memory->readWord(this->registers.regPC);
-        this->registers.regSP = nn;
-        this->registers.regPC += 2; // Increment PC by 2 bytes
     };
 
     this->opCodes[Instruction::SCF] = [this]() {
@@ -200,129 +117,6 @@ GbCpu::GbCpu(IMemory *memory, InterruptController *ic, ISR *isr) :
         this->flags.halfCarry = false;
         this->flags.carry = true;
     };
-
-    this->opCodes[Instruction::JR_C_n] = [this]() {
-        // Implement JR C, n instruction
-        // Jump relative to PC by signed immediate value if carry flag is set
-        int8_t displacement = static_cast<int8_t>(this->memory->read(this->registers.regPC));
-        this->registers.regPC++; // Increment PC by 1 byte
-        if (this->flags.carry) {
-            this->registers.regPC += displacement;
-        }
-    };
-
-    this->opCodes[Instruction::CCF] = [this]() {
-        // Implement CCF instruction
-        // Complement carry flag
-        this->flags.subtract = false;
-        this->flags.halfCarry = false;
-        this->flags.carry = !this->flags.carry;
-    };
-
-    this->opCodes[Instruction::HALT] = [this]() {
-        // Implement HALT instruction
-        // Halt CPU and LCD controller until the next interrupt
-        this->halted = true; // Set CPU halt flag
-    };
-
-    this->opCodes[Instruction::SUB_B] = [this]() {
-        // Subtract the value of register B from register A
-        this->registers.regA -= this->registers.regB;
-        // Set flags if necessary
-    };
-
-    this->opCodes[Instruction::SUB_C] = [this]() {
-        // Subtract the value of register C from register A
-        this->registers.regA -= this->registers.regC;
-        // Set flags if necessary
-    };
-
-    this->opCodes[Instruction::SUB_D] = [this]() {
-        // Subtract the value of register D from register A
-        this->registers.regA -= this->registers.regD;
-        // Set flags if necessary
-    };
-
-    this->opCodes[Instruction::SUB_E] = [this]() {
-        // Subtract the value of register E from register A
-        this->registers.regA -= this->registers.regE;
-        // Set flags if necessary
-    };
-
-    this->opCodes[Instruction::SUB_H] = [this]() {
-        // Subtract the value of register H from register A
-        this->registers.regA -= this->registers.regH;
-        // Set flags if necessary
-    };
-
-    this->opCodes[Instruction::SUB_L] = [this]() {
-        // Subtract the value of register L from register A
-        this->registers.regA -= this->registers.regL;
-        // Set flags if necessary
-    };
-
-    this->opCodes[Instruction::SUB_HLptr] = [this]() {
-        // Subtract the value at the memory address pointed to by HL from register A
-        uint16_t hl = (this->registers.regH << 8) | this->registers.regL;
-        this->registers.regA -= this->memory->read(hl);
-        // Set flags if necessary
-    };
-
-    this->opCodes[Instruction::SUB_A] = [this]() {
-        // Subtract the value of register A from itself (resulting in 0)
-        this->registers.regA -= this->registers.regA;
-        // Set flags if necessary
-    };
-
-    this->opCodes[Instruction::SBC_A_B] = [this]() {
-        // Subtract the value of register B and the carry flag from register A
-        this->registers.regA -= this->registers.regB + this->flags.carry;
-        // Set flags if necessary
-    };
-
-    this->opCodes[Instruction::SBC_A_C] = [this]() {
-        // Subtract the value of register C and the carry flag from register A
-        this->registers.regA -= this->registers.regC + this->flags.carry;
-        // Set flags if necessary
-    };
-
-    this->opCodes[Instruction::SBC_A_D] = [this]() {
-        // Subtract the value of register D and the carry flag from register A
-        this->registers.regA -= this->registers.regD + this->flags.carry;
-        // Set flags if necessary
-    };
-
-    this->opCodes[Instruction::SBC_A_E] = [this]() {
-        // Subtract the value of register E and the carry flag from register A
-        this->registers.regA -= this->registers.regE + this->flags.carry;
-        // Set flags if necessary
-    };
-
-    this->opCodes[Instruction::SBC_A_H] = [this]() {
-        // Subtract the value of register H and the carry flag from register A
-        this->registers.regA -= this->registers.regH + this->flags.carry;
-        // Set flags if necessary
-    };
-
-    this->opCodes[Instruction::SBC_A_L] = [this]() {
-        // Subtract the value of register L and the carry flag from register A
-        this->registers.regA -= this->registers.regL + this->flags.carry;
-        // Set flags if necessary
-    };
-
-    this->opCodes[Instruction::SBC_A_HLptr] = [this]() {
-        // Subtract the value at the memory address pointed to by HL and the carry flag from register A
-        uint16_t hl = (this->registers.regH << 8) | this->registers.regL;
-        this->registers.regA -= this->memory->read(hl) + this->flags.carry;
-        // Set flags if necessary
-    };
-
-    this->opCodes[Instruction::SBC_A_A] = [this]() {
-        // Subtract the value of register A from itself (resulting in 0), the carry flag, and set the result in A
-        this->registers.regA -= this->registers.regA + this->flags.carry;
-        // Set flags if necessary
-    };
-
 
     this->opCodes[Instruction::CP_B] = [this]() {
         uint8_t result = this->registers.regA - this->registers.regB;
@@ -366,36 +160,11 @@ GbCpu::GbCpu(IMemory *memory, InterruptController *ic, ISR *isr) :
         updateFlagsAfterSubtraction(0, this->registers.regA, this->registers.regA);
     };
 
-    this->opCodes[Instruction::RET_NZ] = [this]() {
-        if (!this->flags.zero) {
-            uint16_t address = this->memory->readWord(this->registers.regSP);
-            this->registers.regSP += 2;
-            this->registers.regPC = address;
-        }
-    };
-
     this->opCodes[Instruction::POP_BC] = [this]() {
         this->registers.regC = this->memory->read(this->registers.regSP);
         this->registers.regSP++;
         this->registers.regB = this->memory->read(this->registers.regSP);
         this->registers.regSP++;
-    };
-
-    this->opCodes[Instruction::JP_NZ_nn] = [this]() {
-        uint16_t address = this->memory->readWord(this->registers.regPC);
-        this->registers.regPC += 2;
-        if (!this->flags.zero) {
-            this->registers.regPC = address;
-        }
-    };
-
-    this->opCodes[Instruction::JP_nn] = [this]() {
-        // Read the 16-bit address from memory at the location of the program counter
-        uint16_t address = this->memory->readWord(this->registers.regPC);
-        this->registers.regPC += 2;
-
-        // Set the program counter to the read address, effectively jumping to that address
-        this->registers.regPC = address;
     };
 
     this->opCodes[Instruction::CALL_NZ_nn] = [this]() {
@@ -415,29 +184,6 @@ GbCpu::GbCpu(IMemory *memory, InterruptController *ic, ISR *isr) :
         this->memory->writeByte(this->registers.regSP, this->registers.regB);
         this->registers.regSP--;
         this->memory->writeByte(this->registers.regSP, this->registers.regC);
-    };
-
-
-    this->opCodes[Instruction::RET_Z] = [this]() {
-        if (this->flags.zero) {
-            uint16_t address = this->memory->readWord(this->registers.regSP);
-            this->registers.regSP += 2;
-            this->registers.regPC = address;
-        }
-    };
-
-    this->opCodes[Instruction::RET] = [this]() {
-        uint16_t address = this->memory->readWord(this->registers.regSP);
-        this->registers.regSP += 2;
-        this->registers.regPC = address;
-    };
-
-    this->opCodes[Instruction::JP_Z_nn] = [this]() {
-        uint16_t address = this->memory->readWord(this->registers.regPC);
-        this->registers.regPC += 2;
-        if (this->flags.zero) {
-            this->registers.regPC = address;
-        }
     };
 
     this->opCodes[Instruction::PREFIX_CB] = [this]() {
@@ -465,27 +211,11 @@ GbCpu::GbCpu(IMemory *memory, InterruptController *ic, ISR *isr) :
         this->memory->writeWord(this->registers.regSP, returnAddress);
     };
 
-    this->opCodes[Instruction::RET_NC] = [this]() {
-        if (!this->flags.carry) {
-            uint16_t address = this->memory->readWord(this->registers.regSP);
-            this->registers.regSP += 2;
-            this->registers.regPC = address;
-        }
-    };
-
     this->opCodes[Instruction::POP_DE] = [this]() {
         this->registers.regE = this->memory->read(this->registers.regSP);
         this->registers.regSP++;
         this->registers.regD = this->memory->read(this->registers.regSP);
         this->registers.regSP++;
-    };
-
-    this->opCodes[Instruction::JP_NC_nn] = [this]() {
-        uint16_t address = this->memory->readWord(this->registers.regPC);
-        this->registers.regPC += 2;
-        if (!this->flags.carry) {
-            this->registers.regPC = address;
-        }
     };
 
     this->opCodes[Instruction::CALL_NC_nn] = [this]() {
@@ -507,40 +237,6 @@ GbCpu::GbCpu(IMemory *memory, InterruptController *ic, ISR *isr) :
         this->memory->writeByte(this->registers.regSP, this->registers.regE);
     };
 
-    this->opCodes[Instruction::SUB_n] = [this]() {
-        uint8_t value = this->memory->read(this->registers.regPC);
-        this->registers.regPC++;
-        uint16_t temp = this->registers.regA - value;
-        this->flags.zero = (temp & 0xFF) == 0;
-        this->flags.subtract = true;
-        this->flags.halfCarry = ((this->registers.regA & 0x0F) - (value & 0x0F)) < 0;
-        this->flags.carry = temp > 0xFF;
-        this->registers.regA = temp & 0xFF;
-    };
-
-    this->opCodes[Instruction::RET_C] = [this]() {
-        if (this->flags.carry) {
-            uint16_t address = this->memory->readWord(this->registers.regSP);
-            this->registers.regSP += 2;
-            this->registers.regPC = address;
-        }
-    };
-
-    this->opCodes[Instruction::RETI] = [this]() {
-        this->interruptController->requestInterrupt(InterruptType::VBlank);
-        uint16_t address = this->memory->readWord(this->registers.regSP);
-        this->registers.regSP += 2;
-        this->registers.regPC = address;
-    };
-
-    this->opCodes[Instruction::JP_C_nn] = [this]() {
-        uint16_t address = this->memory->readWord(this->registers.regPC);
-        this->registers.regPC += 2;
-        if (this->flags.carry) {
-            this->registers.regPC = address;
-        }
-    };
-
     this->opCodes[Instruction::CALL_C_nn] = [this]() {
         if (this->flags.carry) {
             uint16_t returnAddress = this->registers.regPC;
@@ -551,23 +247,6 @@ GbCpu::GbCpu(IMemory *memory, InterruptController *ic, ISR *isr) :
             // Increment PC to skip the 16-bit address
             this->registers.regPC += 2;
         }
-    };
-
-    this->opCodes[Instruction::SBC_A_n] = [this]() {
-        uint8_t value = this->memory->read(this->registers.regPC);
-        this->registers.regPC++;
-        uint16_t temp = this->registers.regA - value - this->flags.carry;
-        this->flags.zero = (temp & 0xFF) == 0;
-        this->flags.subtract = true;
-        this->flags.halfCarry = ((this->registers.regA & 0x0F) - (value & 0x0F) - this->flags.carry) < 0;
-        this->flags.carry = temp > 0xFF;
-        this->registers.regA = temp & 0xFF;
-    };
-
-    this->opCodes[Instruction::LDH_n_A] = [this]() {
-        uint8_t address = this->memory->read(this->registers.regPC);
-        this->registers.regPC++;
-        this->memory->writeByte(0xFF00 + address, this->registers.regA);
     };
 
     this->opCodes[Instruction::POP_HL] = [this]() {
@@ -582,22 +261,6 @@ GbCpu::GbCpu(IMemory *memory, InterruptController *ic, ISR *isr) :
         this->memory->writeByte(this->registers.regSP, this->registers.regH);
         this->registers.regSP--;
         this->memory->writeByte(this->registers.regSP, this->registers.regL);
-    };
-
-    this->opCodes[Instruction::JP_HL] = [this]() {
-        this->registers.regPC = (this->registers.regH << 8) | this->registers.regL;
-    };
-
-    this->opCodes[Instruction::LD_nn_A] = [this]() {
-        uint16_t address = this->memory->readWord(this->registers.regPC);
-        this->registers.regPC += 2;
-        this->memory->writeByte(address, this->registers.regA);
-    };
-
-    this->opCodes[Instruction::LDH_A_n] = [this]() {
-        uint8_t address = this->memory->read(this->registers.regPC);
-        this->registers.regPC++;
-        this->registers.regA = this->memory->read(0xFF00 + address);
     };
 
     this->opCodes[Instruction::POP_AF] = [this]() {
@@ -618,10 +281,6 @@ GbCpu::GbCpu(IMemory *memory, InterruptController *ic, ISR *isr) :
         this->memory->writeByte(this->registers.regSP, this->registers.regA);
         this->registers.regSP--;
         this->memory->writeByte(this->registers.regSP, this->registers.regF);
-    };
-
-    this->opCodes[Instruction::LD_SP_HL] = [this]() {
-        this->registers.regSP = (this->registers.regH << 8) | this->registers.regL;
     };
 
     this->opCodes[Instruction::EI] = [this]() {
@@ -653,7 +312,6 @@ void GbCpu::updateFlagsAfterAddition(uint8_t result, uint8_t operand1, uint8_t o
     flags.carry = (operand1 > UINT8_MAX - operand2);
 }
 
-
 void GbCpu::updateFlagsAfterSubtraction(uint8_t result, uint8_t operand1, uint8_t operand2) {
     // Update zero flag
     this->flags.zero = (result == 0);
@@ -666,7 +324,7 @@ void GbCpu::updateFlagsAfterSubtraction(uint8_t result, uint8_t operand1, uint8_
     this->flags.halfCarry = ((operand1 & 0x0F) < (operand2 & 0x0F));
 
     // Update carry flag
-    this->flags.carry = (result < operand1);
+    this->flags.carry = (operand2 > operand1);
 }
 
 void GbCpu::updateFlagsAfterLogicalOperation(uint8_t value, bool isAndOperation) {

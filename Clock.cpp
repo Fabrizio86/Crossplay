@@ -6,7 +6,9 @@
 #include "Clock.h"
 #include "SFML/Graphics.hpp"
 #include "GameBoyColorEmulator/Consts.h"
+#include "GameBoyColorEmulator/StopCpuException.h"
 
+#include <iostream>
 #include <thread>
 
 using namespace std;
@@ -21,8 +23,13 @@ void Clock::start() {
             std::unique_lock<std::mutex> lock(m);
             cv.wait(lock);
 
-            this->cpu->exec();
-
+            try {
+                this->cpu->exec();
+            }
+            catch (StopCPUException &e) {
+                cout << e.what() << endl;
+                this->running = false;
+            }
         }
     });
 
@@ -35,15 +42,15 @@ void Clock::start() {
         }
     });
 
-    //clkT.detach();
-    //plkT.detach();
+    clkT.detach();
+    plkT.detach();
 
     // Handle events
     sf::Event event;
 
     while (this->running) {
 
-        while (window->pollEvent(event)) {
+        while (window->pollEvent(event) && this->running) {
             if (event.type == sf::Event::Closed)
                 window->close();
         }

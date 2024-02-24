@@ -60,6 +60,8 @@ private:
 
     void pushToStack(uint8_t value);
 
+    void performSubtraction(uint8_t operandB, bool includeCarry);
+
     void initXor();
 
     void initRst();
@@ -85,6 +87,14 @@ private:
     void initAdd();
 
     void initAnd();
+
+    void initSub();
+
+    void initR();
+
+    void initJ();
+
+    uint16_t popFromStack();
 };
 
 #endif //CROSSPLAY_GBCPU_H

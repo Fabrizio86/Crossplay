@@ -44,11 +44,10 @@ struct Registers {
         this->reset();
     }
 
-    void reset()
-    {
+    void reset() {
+        memset(this, 0, sizeof(Registers));
         regA = 0x01;
-        regB = regC = regD = regE = regH = regL = regF = 0;
-        regSP =  INITIAL_SP_ADDRESS;
+        regSP = INITIAL_SP_ADDRESS;
         regPC = INITIAL_ROM_ADDRESS;
     }
 };

@@ -55,6 +55,10 @@ set(SOURCE_FILES
         Cpu/GbCpu.initLdl.cpp
         Cpu/GbCpu.initAdd.cpp
         Cpu/GbCpu.initAnd.cpp
+        Cpu/GbCpu.initSub.cpp
+        StopCpuException.h
+        Cpu/GbCpu.initR.cpp
+        Cpu/GbCpu.initJ.cpp
 )
 
 # Create the library
