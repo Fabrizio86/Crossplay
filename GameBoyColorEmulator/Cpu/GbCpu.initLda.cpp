@@ -93,4 +93,19 @@ void GbCpu::initLda() {
         this->registers.regA = this->memory->read(address);
     };
 
+    this->opCodes[Instruction::DAA] = [this]() {
+        uint8_t correction = 0x00;
+        if (this->flags.halfCarry || (!this->flags.subtract && (this->registers.regA & 0x0F) > 9)) {
+            correction |= 0x06;
+        }
+
+        if (this->flags.carry || (!this->flags.subtract && this->registers.regA > 0x99)) {
+            correction |= 0x60;
+        }
+
+        this->registers.regA += (this->flags.subtract ? -correction : correction);
+        this->flags.carry = this->registers.regA > 0xFF;
+        this->flags.zero = (this->registers.regA == 0);
+        this->flags.halfCarry = false;
+    };
 }

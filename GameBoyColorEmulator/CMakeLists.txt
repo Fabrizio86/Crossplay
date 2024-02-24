@@ -59,6 +59,8 @@ set(SOURCE_FILES
         StopCpuException.h
         Cpu/GbCpu.initR.cpp
         Cpu/GbCpu.initJ.cpp
+        Cpu/GbCpu.initC.cpp
+        Cpu/GbCpu.initPushPop.cpp
 )
 
 # Create the library

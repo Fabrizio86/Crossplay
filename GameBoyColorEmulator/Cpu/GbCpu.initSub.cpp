@@ -72,5 +72,10 @@ void GbCpu::initSub() {
         performSubtraction(this->registers.regA, true);
     };
 
+    this->opCodes[Instruction::SCF] = [this]() {
+        this->flags.subtract = false;
+        this->flags.halfCarry = false;
+        this->flags.carry = true;
+    };
 
 }

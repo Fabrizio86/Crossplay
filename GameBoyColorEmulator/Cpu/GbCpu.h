@@ -94,6 +94,10 @@ private:
 
     void initJ();
 
+    void initC();
+
+    void initPushPop();
+
     uint16_t popFromStack();
 };
 
