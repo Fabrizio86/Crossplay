@@ -1,10 +1,16 @@
 cmake_minimum_required(VERSION 3.27)
 project(GameBoyColorEmulator)
 
+# Replace with the actual path to SFML
+set(SFML_DIR "/opt/homebrew/opt/sfml")
+
+# Find SFML package
+find_package(SFML 2.5 COMPONENTS graphics window system REQUIRED)
+
 # Add all your source files here
 set(SOURCE_FILES
-        GbCpu.h
-        GbCpu.cpp
+        Cpu/GbCpu.h
+        Cpu/GbCpu.cpp
         Registers.h
         InterruptController.h
         InterruptController.cpp
@@ -12,8 +18,8 @@ set(SOURCE_FILES
         InterruptVectorTable.h
         ISR.cpp
         ISR.h
-        GbMemory.cpp
-        GbMemory.h
+        Bus.cpp
+        Bus.h
         Consts.h
         Button.h
         MBC/MBC1.cpp
@@ -34,14 +40,27 @@ set(SOURCE_FILES
         MBC/MBC7.h
         MBC/CartridgeHeader.cpp
         MBC/CartridgeHeader.h
-        PPU.cpp
-        PPU.h
+        GbPPU.cpp
+        GbPPU.h
+        Cpu/GbCpu.initXor.cpp
+        Cpu/GbCpu.initRst.cpp
+        Cpu/GbCpu.initLdb.cpp
+        Cpu/GbCpu.initLda.cpp
+        Cpu/GbCpu.initInc.cpp
+        Cpu/GbCpu.initDec.cpp
+        Cpu/GbCpu.initLdd.cpp
+        Cpu/GbCpu.initLdh.cpp
+        Cpu/GbCpu.initLdc.cpp
+        Cpu/GbCpu.initLde.cpp
+        Cpu/GbCpu.initLdl.cpp
+        Cpu/GbCpu.initAdd.cpp
+        Cpu/GbCpu.initAnd.cpp
 )
 
 # Create the library
 add_library(GameBoyColorEmulator STATIC ${SOURCE_FILES})
 
 # Include directories
-target_include_directories(GameBoyColorEmulator PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_include_directories(GameBoyColorEmulator PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include ${SFML_INCLUDE_DIR})
 
-target_link_libraries(GameBoyColorEmulator PUBLIC Interfaces)
+target_link_libraries(GameBoyColorEmulator PUBLIC Interfaces sfml-graphics sfml-window sfml-system)

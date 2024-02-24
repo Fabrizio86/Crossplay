@@ -2,20 +2,39 @@
 // Created by Fabrizio Paino on 2024-02-19.
 //
 
-#include "PPU.h"
+#include "GbPPU.h"
 #include "Consts.h"
+#include "SFML/Graphics.hpp"
 
-PPU::PPU(IMemory *memory, InterruptController *controller) : memory(memory),
-                                                             controller(controller),
-                                                             screenBuffer(SCANLINE_WIDTH * SCANLINE_HEIGHT) {
+GbPPU::GbPPU(IMemory *memory, InterruptController *controller) : memory(memory),
+                                                                 controller(controller),
+                                                                 screenBuffer(SCANLINE_WIDTH * SCANLINE_HEIGHT) {
 
 }
 
-void PPU::exec() {
+void GbPPU::displayToWindow() {
+
+    // Clear the window
+    window->clear();
+
+    sf::Texture texture;
+    texture.create(SCANLINE_WIDTH, SCANLINE_HEIGHT);
+    texture.update(reinterpret_cast<const sf::Uint8 *>(this->screenBuffer.data()));
+
+    // Create a sprite to display the texture
+    sf::Sprite sprite(texture);
+    sprite.scale(3, 3);
+    window->draw(sprite);
+
+    // Display the window
+    window->display();
+}
+
+void GbPPU::exec() {
     // Increment the cycle count based on the system clock
     this->cycles++;
 
-    // Check which PPU phase we are in based on the cycle count
+    // Check which GbPPU phase we are in based on the cycle count
     // and execute the corresponding phase
     if (this->cycles < H_BLANK_CYCLES) {
         this->hBlank();
@@ -31,7 +50,7 @@ void PPU::exec() {
     }
 }
 
-void PPU::hBlank() {
+void GbPPU::hBlank() {
     // Update internal registers
     updateInternalRegisters();
 
@@ -48,7 +67,7 @@ void PPU::hBlank() {
     synchronizeWithOtherComponents();
 }
 
-void PPU::vBlank() {
+void GbPPU::vBlank() {
     // Update internal registers
     updateInternalRegisters();
 
@@ -64,7 +83,7 @@ void PPU::vBlank() {
     synchronizeWithOtherComponents();
 }
 
-void PPU::activeRendering() {
+void GbPPU::activeRendering() {
     // Iterate over each scanline
     for (int scanline = 0; scanline < SCANLINE_HEIGHT; ++scanline) {
         // Check if the current scanline falls within the window's visible area
@@ -97,9 +116,11 @@ void PPU::activeRendering() {
             }
         }
     }
+
+    this->displayToWindow();
 }
 
-void PPU::updateInternalRegisters() {
+void GbPPU::updateInternalRegisters() {
     // Update current scanline and pixel
     currentPixel++;
 
@@ -119,7 +140,7 @@ void PPU::updateInternalRegisters() {
     }
 }
 
-void PPU::checkForInterrupts() {
+void GbPPU::checkForInterrupts() {
     // Check if V-Blank interrupt is enabled and if V-Blank interrupt flag is set
     if (interruptFlags & INT_FLAG_VBLANK
         && memory->read(REG_IE_ADDRESS) & INT_VBLANK_ENABLE) {
@@ -128,7 +149,7 @@ void PPU::checkForInterrupts() {
     }
 }
 
-void PPU::performDMA() {
+void GbPPU::performDMA() {
     // Check if DMA transfer is requested
     if (this->controller->isInterruptRequested(InterruptType::DMA)) {
         // Simulate DMA transfer from ROM or RAM to OAM
@@ -143,7 +164,7 @@ void PPU::performDMA() {
     }
 }
 
-void PPU::backgroundProcessing() {
+void GbPPU::backgroundProcessing() {
     // Update background scroll position based on current scanline
     backgroundScrollY = currentScanline;
 
@@ -176,11 +197,11 @@ void PPU::backgroundProcessing() {
     }
 }
 
-void PPU::synchronizeWithOtherComponents() {
+void GbPPU::synchronizeWithOtherComponents() {
 
 }
 
-void PPU::renderPixel(uint8_t tileData, int tilePixelX, int tilePixelY, int screenX, int screenY) {
+void GbPPU::renderPixel(uint8_t tileData, int tilePixelX, int tilePixelY, int screenX, int screenY) {
     // Determine the bit offset for the pixel within the tile data
     int bitOffset = (7 - tilePixelX);
 
@@ -196,7 +217,7 @@ void PPU::renderPixel(uint8_t tileData, int tilePixelX, int tilePixelY, int scre
     screenBuffer[index] = colorValue;
 }
 
-uint8_t PPU::getColorFromPalette(int index) {
+uint8_t GbPPU::getColorFromPalette(int index) {
     // Ensure index is within bounds
     if (index >= 0 && index < PALETTE_SIZE) {
         return palette[index];
@@ -206,7 +227,7 @@ uint8_t PPU::getColorFromPalette(int index) {
     }
 }
 
-void PPU::renderSprites() {
+void GbPPU::renderSprites() {
     // Iterate through sprite attributes in the OAM
     for (int i = 0; i < OAM_SIZE; i += 4) {
         // Read sprite attributes from OAM

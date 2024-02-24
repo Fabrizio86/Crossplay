@@ -2,8 +2,8 @@
 // Created by Fabrizio Paino on 2024-02-19.
 //
 
-#ifndef CROSSPLAY_PPU_H
-#define CROSSPLAY_PPU_H
+#ifndef CROSSPLAY_GBPPU_H
+#define CROSSPLAY_GBPPU_H
 
 #include <vector>
 
@@ -11,9 +11,9 @@
 #include "InterruptController.h"
 #include "../Interfaces/IPPU.h"
 
-class PPU : public IPPU {
+class GbPPU : public IPPU {
 public:
-    PPU(IMemory *memory, InterruptController *controller);
+    GbPPU(IMemory *memory, InterruptController *controller);
 
     void exec();
 
@@ -35,7 +35,7 @@ private:
 
     std::vector<uint8_t> screenBuffer;
 
-    // Define methods for different PPU phases
+    // Define methods for different GbPPU phases
     void hBlank();
 
     void vBlank();
@@ -58,7 +58,9 @@ private:
     uint8_t getColorFromPalette(int index);
 
     void renderSprites();
+
+    void displayToWindow();
 };
 
 
-#endif //CROSSPLAY_PPU_H
+#endif //CROSSPLAY_GBPPU_H

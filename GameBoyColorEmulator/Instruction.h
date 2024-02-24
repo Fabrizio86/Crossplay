@@ -255,4 +255,5 @@ enum Instruction : uint8_t {
     CP_n = 0xFE,
     RST_38H = 0xFF
 };
+
 #endif //CROSSPLAY_INSTRUCTION_H

@@ -4,6 +4,8 @@
 //
 
 #include "Clock.h"
+#include "SFML/Graphics.hpp"
+#include "GameBoyColorEmulator/Consts.h"
 
 #include <thread>
 
@@ -33,13 +35,23 @@ void Clock::start() {
         }
     });
 
-    clkT.detach();
-    plkT.detach();
+    //clkT.detach();
+    //plkT.detach();
 
-    while (this->running){
-        std::this_thread::sleep_for(std::chrono::microseconds(this->freq));
+    // Handle events
+    sf::Event event;
+
+    while (this->running) {
+
+        while (window->pollEvent(event)) {
+            if (event.type == sf::Event::Closed)
+                window->close();
+        }
+
+        std::this_thread::sleep_for(std::chrono::nanoseconds(238));
         std::lock_guard<std::mutex> lock(m);
         cv.notify_all();
+
     }
 }
 

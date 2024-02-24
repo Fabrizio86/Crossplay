@@ -3,21 +3,22 @@
 // Copyright (c) 2024 Aedifex Solutions Inc. All rights reserved.
 //
 
-#ifndef CROSSPLAY_GBMEMORY_H
-#define CROSSPLAY_GBMEMORY_H
+#ifndef CROSSPLAY_BUS_H
+#define CROSSPLAY_BUS_H
 
 #include "../Interfaces/IMemory.h"
 #include "../Definitions.h"
 #include "../Interfaces/IMBC.h"
 #include "Consts.h"
+#include "InterruptController.h"
 
 #include <string>
 
-class GbMemory final : public IMemory {
+class Bus final : public IMemory {
 public:
-    GbMemory();
+    Bus(InterruptController *ic);
 
-    ~GbMemory() override = default;
+    ~Bus() override = default;
 
     uint8_t read(uint32_t address) const override;
 
@@ -29,15 +30,18 @@ public:
 
     void loadRom(const std::vector<uint8_t> &romData);
 
+    void performDMA(uint8_t address);
+
 private:
     std::unique_ptr<IMBC> mbc; // The memory bank controller
+    InterruptController *ic;
 
     uint8_t videoRam[CARTRIDGE_RAM_SIZE];
     uint8_t workRam[CARTRIDGE_RAM_SIZE];
-    uint8_t oam[OAM_SIZE];
+    uint8_t oam[MAX_SPRITES];
     uint8_t ioPorts[IO_REGISTER_SIZE];
-    uint8_t hram[HRAM_SIZE];
-    uint8_t interruptEnable;
+    uint8_t hRam[HRAM_SIZE];
+    InterruptFlags iFlags;
 
     bool ramEnabled;
 
@@ -56,4 +60,4 @@ private:
 };
 
 
-#endif //CROSSPLAY_GBMEMORY_H
+#endif //CROSSPLAY_BUS_H

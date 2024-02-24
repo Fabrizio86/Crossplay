@@ -37,8 +37,6 @@ void InterruptController::requestInterrupt(InterruptType interruptType)
 
 bool InterruptController::isInterruptRequests()
 {
-    if (this->interruptRequests[InterruptType::DI]) return false;
-
     for (const auto& entry : this->interruptRequests)
     {
         if (entry.second)

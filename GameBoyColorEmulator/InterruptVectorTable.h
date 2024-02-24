@@ -9,10 +9,11 @@
 #include <unordered_map>
 #include "../Definitions.h"
 #include "InterruptType.h"
+#include "Bus.h"
 
 class InterruptVectorTable {
 public:
-    InterruptVectorTable();
+    InterruptVectorTable(Bus* bus);
 
     ISRFunctionPtr getInterruptHandler(InterruptType interruptType) const;
 
@@ -20,6 +21,7 @@ public:
 
 private:
     std::unordered_map<InterruptType, ISRFunctionPtr> interruptHandlers;
+    Bus* bus;
 };
 
 

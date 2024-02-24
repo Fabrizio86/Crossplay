@@ -46,8 +46,9 @@ struct Registers {
 
     void reset()
     {
-        regA = regB = regC = regD = regE = regH = regL = 0;
-        regSP = regF = 0;
+        regA = 0x01;
+        regB = regC = regD = regE = regH = regL = regF = 0;
+        regSP =  INITIAL_SP_ADDRESS;
         regPC = INITIAL_ROM_ADDRESS;
     }
 };

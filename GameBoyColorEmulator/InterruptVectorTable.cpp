@@ -4,19 +4,27 @@
 //
 
 #include "InterruptVectorTable.h"
+#include "Consts.h"
+
+#include <iostream>
 
 ISRFunctionPtr InterruptVectorTable::getInterruptHandler(InterruptType interruptType) const {
     return this->interruptHandlers.at(interruptType);
 }
 
 // todo: need to implement these
-InterruptVectorTable::InterruptVectorTable() {
+InterruptVectorTable::InterruptVectorTable(Bus *bus) : bus(bus) {
     this->interruptHandlers[InterruptType::VBlank] = []() {};
     this->interruptHandlers[InterruptType::LCD_STAT] = []() {};
     this->interruptHandlers[InterruptType::TimerOverflow] = []() {};
     this->interruptHandlers[InterruptType::SerialTransferComplete] = []() {};
     this->interruptHandlers[InterruptType::ButtonPress] = []() {};
     this->interruptHandlers[InterruptType::Unused] = []() {};
+
+    this->interruptHandlers[InterruptType::DMA] = [bus]() {
+        std::cout << "DMA value: " << (int)DMA_VALUE << std::endl;
+        bus->performDMA(DMA_VALUE);
+    };
 }
 
 void InterruptVectorTable::setHandler(InterruptType interruptType, ISRFunctionPtr handler) {

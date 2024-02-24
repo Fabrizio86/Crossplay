@@ -5,9 +5,11 @@
 #ifndef CONSTS_H
 #define CONSTS_H
 
+#include "SFML/Graphics.hpp"
 #include <cstdint>
 
-constexpr uint16_t INITIAL_ROM_ADDRESS = 0x0100;
+static constexpr uint16_t INITIAL_ROM_ADDRESS = 0x0100;
+static constexpr uint16_t INITIAL_SP_ADDRESS = 0xFFFE;
 
 static constexpr size_t ROM_BANK_SIZE = 16 * 1024;          // 16 KB
 static constexpr size_t RAM_BANK_SIZE = 8 * 1024;           // 8 KB
@@ -21,10 +23,23 @@ static constexpr size_t SOUND_REGISTERS_SIZE = 0x100;       // 256 bytes
 static constexpr size_t TIMER_REGISTERS_SIZE = 0x04;        // 4 bytes
 static constexpr size_t LCD_REGISTERS_SIZE = 0x60;          // 96 bytes
 static constexpr size_t INTERRUPT_REGISTERS_SIZE = 0x04;    // 4 bytes
+static constexpr size_t ECHO_RAM_BASE = 0xE000;
+static constexpr size_t WORK_RAM_BASE = 0xC000;
 static constexpr size_t OAM_SIZE = 0xA0;
 static constexpr size_t OAM_ADDR = 0xFE00;
 static constexpr int MAX_SPRITES = 40;
 static constexpr int MBC_TYPE = 0x147;
+
+typedef struct {
+    unsigned VBlank : 1;
+    unsigned LCD : 1;
+    unsigned Timer : 1;
+    unsigned Serial : 1;
+    unsigned Joypad : 1;
+    unsigned Unused1 : 1;
+    unsigned Unused2 : 1;
+    unsigned Unused3 : 1;
+}InterruptFlags;
 
 // Timing constants (values are approximate and may need adjustment)
 static constexpr int H_BLANK_CYCLES = 204; // Number of cycles in H-Blank phase
@@ -54,6 +69,8 @@ static constexpr uint16_t WINDOW_TILE_MAP_ADDRESS = 0x9800; // Example address f
 // Define the number of colors in the palette
 static const int PALETTE_SIZE = 4;
 
+static uint8_t DMA_VALUE = 0;
+
 // Define the palette colors (example colors for the Game Boy Color)
 static const uint32_t palette[PALETTE_SIZE] = {
         0xFF686868, // Color 0: Dark gray
@@ -61,5 +78,20 @@ static const uint32_t palette[PALETTE_SIZE] = {
         0xFF101010, // Color 2: Black
         0xFFFFFFFF  // Color 3: White
 };
+
+struct OamEntry {
+    uint8_t y;
+    uint8_t x;
+    uint8_t tile;
+
+    unsigned cgbPn: 3;
+    unsigned cgbVramBank: 1;
+    unsigned pn: 1;
+    unsigned xflp: 1;
+    unsigned yflp: 1;
+    unsigned bgp: 1;
+};
+
+static sf::RenderWindow* const window = new sf::RenderWindow(sf::VideoMode(SCANLINE_WIDTH * 3, SCANLINE_HEIGHT * 3), "Game Boy Color Emulator");
 
 #endif //CONSTS_H

@@ -1,12 +1,12 @@
 #include <iostream>
 #include "Hardware.h"
-#include "GameBoyColorEmulator/GbCpu.h"
-#include "GameBoyColorEmulator/GbMemory.h"
-#include "GameBoyColorEmulator/PPU.h"
+#include "GameBoyColorEmulator/Cpu/GbCpu.h"
+#include "GameBoyColorEmulator/Bus.h"
+#include "GameBoyColorEmulator/GbPPU.h"
 #include <fstream>
 #include <vector>
 
-void loadGbcRom(const std::string &filePath, GbMemory *memory) {
+void loadGbcRom(const std::string &filePath, Bus *memory) {
     std::ifstream romFile(filePath, std::ios::binary);
     if (!romFile.is_open()) {
         // Handle error: unable to open file
@@ -29,15 +29,15 @@ void loadGbcRom(const std::string &filePath, GbMemory *memory) {
 
 int main() {
     Hardware *hardware;
-    auto *memory = new GbMemory();
     InterruptController ic;
-    InterruptVectorTable ivt;
+    auto *bus = new Bus(&ic);
+    InterruptVectorTable ivt(bus);
     ISR isr(&ic, &ivt);
-    ICpu *cpu = new GbCpu(memory, &ic, &isr);
-    IPPU *ppu = new PPU(memory, &ic);
+    ICpu *cpu = new GbCpu(bus, &ic, &isr);
+    IPPU *ppu = new GbPPU(bus, &ic);
     Clock clock(4.20, cpu, ppu);
 
-    loadGbcRom("/Users/fabriziopaino/CrossPlay/PR.gb", memory);
+    loadGbcRom("/Users/fabriziopaino/CrossPlay/PR.gb", bus);
 
     clock.start();
 
@@ -47,5 +47,9 @@ int main() {
     clock.stop();
 
     std::cout << "Hello, World!" << std::endl;
+
+    delete bus;
+    delete cpu;
+    delete ppu;
     return 0;
 }
