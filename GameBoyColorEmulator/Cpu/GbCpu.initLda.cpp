@@ -26,13 +26,18 @@ void GbCpu::initLda() {
     };
 
     this->opCodes[Instruction::LD_HLD_A] = [this]() {
-        uint16_t address = (this->registers.regH << 8) | this->registers.regL; // Combine H and L to form the HL pair
-        this->memory->writeByte(address, this->registers.regA); // Write the content of register A into the memory addressed by HL
+        uint16_t h = static_cast<uint16_t>(this->registers.regH);
+        uint16_t l = static_cast<uint16_t>(this->registers.regL);
+        uint16_t address = (h << 8) | l;
 
-        // Decrement the HL register pair
-        address--;
-        this->registers.regH = (address >> 8) & 0xFF; // Getting the higher byte
-        this->registers.regL = address & 0xFF; // Getting the lower byte
+        this->memory->writeByte(address, this->registers.regA);
+
+        if (this->registers.regL == 0x00) {
+            this->registers.regH--;
+            this->registers.regL = 0xFF;
+        } else {
+            this->registers.regL--;
+        }
     };
 
     this->opCodes[Instruction::LD_A_HLD] = [this]() {

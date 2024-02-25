@@ -6,51 +6,58 @@
 #include "Consts.h"
 #include "SFML/Graphics.hpp"
 
-GbPPU::GbPPU(IMemory *memory, InterruptController *controller) : memory(memory),
+GbPPU::GbPPU(IMemory* memory, InterruptController* controller) : memory(memory),
                                                                  controller(controller),
-                                                                 screenBuffer(SCANLINE_WIDTH * SCANLINE_HEIGHT) {
-
+                                                                 screenBuffer(SCANLINE_WIDTH * SCANLINE_HEIGHT)
+{
 }
 
-void GbPPU::displayToWindow() {
-
+void GbPPU::displayToWindow()
+{
     // Clear the window
     window->clear();
 
     sf::Texture texture;
     texture.create(SCANLINE_WIDTH, SCANLINE_HEIGHT);
-    texture.update(reinterpret_cast<const sf::Uint8 *>(this->screenBuffer.data()));
+    texture.update(reinterpret_cast<const sf::Uint8*>(this->screenBuffer.data()));
 
     // Create a sprite to display the texture
     sf::Sprite sprite(texture);
     sprite.scale(3, 3);
     window->draw(sprite);
 
-    // Display the window
     window->display();
 }
 
-void GbPPU::exec() {
+void GbPPU::exec()
+{
     // Increment the cycle count based on the system clock
     this->cycles++;
 
     // Check which GbPPU phase we are in based on the cycle count
     // and execute the corresponding phase
-    if (this->cycles < H_BLANK_CYCLES) {
+    if (this->cycles < H_BLANK_CYCLES)
+    {
         this->hBlank();
-    } else if (this->cycles < V_BLANK_CYCLES) {
+    }
+    else if (this->cycles < V_BLANK_CYCLES)
+    {
         this->vBlank();
-    } else {
+    }
+    else
+    {
         this->activeRendering();
     }
 
     // Reset the cycle count at the end of each frame
-    if (this->cycles >= FRAME_CYCLES) {
+    if (this->cycles >= FRAME_CYCLES)
+    {
         this->cycles = 0;
     }
 }
 
-void GbPPU::hBlank() {
+void GbPPU::hBlank()
+{
     // Update internal registers
     updateInternalRegisters();
 
@@ -67,7 +74,8 @@ void GbPPU::hBlank() {
     synchronizeWithOtherComponents();
 }
 
-void GbPPU::vBlank() {
+void GbPPU::vBlank()
+{
     // Update internal registers
     updateInternalRegisters();
 
@@ -83,18 +91,23 @@ void GbPPU::vBlank() {
     synchronizeWithOtherComponents();
 }
 
-void GbPPU::activeRendering() {
+void GbPPU::activeRendering()
+{
     // Iterate over each scanline
-    for (int scanline = 0; scanline < SCANLINE_HEIGHT; ++scanline) {
+    for (int scanline = 0; scanline < SCANLINE_HEIGHT; ++scanline)
+    {
         // Check if the current scanline falls within the window's visible area
-        if (scanline >= WINDOW_Y && scanline < WINDOW_Y + SCANLINE_HEIGHT) {
+        if (scanline >= WINDOW_Y && scanline < WINDOW_Y + SCANLINE_HEIGHT)
+        {
             // Calculate the window's position on the screen
             int windowScreenY = scanline - WINDOW_Y;
 
             // Iterate over each pixel in the window
-            for (int pixel = 0; pixel < SCANLINE_WIDTH; ++pixel) {
+            for (int pixel = 0; pixel < SCANLINE_WIDTH; ++pixel)
+            {
                 // Check if the current pixel is within the window's visible area
-                if (pixel >= WINDOW_X && pixel < WINDOW_X + SCANLINE_WIDTH) {
+                if (pixel >= WINDOW_X && pixel < WINDOW_X + SCANLINE_WIDTH)
+                {
                     // Calculate the window's position on the screen
                     int windowScreenX = pixel - WINDOW_X;
 
@@ -120,40 +133,50 @@ void GbPPU::activeRendering() {
     this->displayToWindow();
 }
 
-void GbPPU::updateInternalRegisters() {
+void GbPPU::updateInternalRegisters()
+{
     // Update current scanline and pixel
     currentPixel++;
 
     // Check if reached the end of the scanline
-    if (currentPixel >= SCANLINE_WIDTH) {
+    if (currentPixel >= SCANLINE_WIDTH)
+    {
         currentPixel = 0; // Reset pixel count
         currentScanline++; // Move to the next scanline
 
         // Check if reached the end of the frame
-        if (currentScanline >= SCANLINE_HEIGHT) {
+        if (currentScanline >= SCANLINE_HEIGHT)
+        {
             currentScanline = 0; // Reset scanline count
             displayMode = DISPLAY_MODE_VBLANK; // Enter V-Blank mode
             interruptFlags |= INT_FLAG_VBLANK; // Set V-Blank interrupt flag
-        } else {
+        }
+        else
+        {
             displayMode = DISPLAY_MODE_HBLANK; // Enter H-Blank mode
         }
     }
 }
 
-void GbPPU::checkForInterrupts() {
+void GbPPU::checkForInterrupts()
+{
     // Check if V-Blank interrupt is enabled and if V-Blank interrupt flag is set
     if (interruptFlags & INT_FLAG_VBLANK
-        && memory->read(REG_IE_ADDRESS) & INT_VBLANK_ENABLE) {
+        && memory->read(REG_IE_ADDRESS) & INT_VBLANK_ENABLE)
+    {
         // Signal interrupt to the CPU
         this->controller->requestInterrupt(InterruptType::VBlank);
     }
 }
 
-void GbPPU::performDMA() {
+void GbPPU::performDMA()
+{
     // Check if DMA transfer is requested
-    if (this->controller->isInterruptRequested(InterruptType::DMA)) {
+    if (this->controller->isInterruptRequested(InterruptType::DMA))
+    {
         // Simulate DMA transfer from ROM or RAM to OAM
-        for (int i = 0; i < OAM_SIZE; ++i) {
+        for (int i = 0; i < OAM_SIZE; ++i)
+        {
             uint16_t sourceAddress = DMA_SOURCE_ADDRESS + i;
             uint8_t value = memory->read(sourceAddress);
             memory->writeByte(OAM_ADDR + i, value); // Write to OAM directly
@@ -164,13 +187,16 @@ void GbPPU::performDMA() {
     }
 }
 
-void GbPPU::backgroundProcessing() {
+void GbPPU::backgroundProcessing()
+{
     // Update background scroll position based on current scanline
     backgroundScrollY = currentScanline;
 
     // Perform background rendering for each row of tiles
-    for (int y = 0; y < SCANLINE_HEIGHT; ++y) {
-        for (int x = 0; x < SCANLINE_WIDTH; ++x) {
+    for (int y = 0; y < SCANLINE_HEIGHT; ++y)
+    {
+        for (int x = 0; x < SCANLINE_WIDTH; ++x)
+        {
             // Calculate the tile index for the current pixel position
             int tileX = (backgroundScrollX + x) / TILE_DIMENSION;
             int tileY = (backgroundScrollY + y) / TILE_DIMENSION;
@@ -192,16 +218,18 @@ void GbPPU::backgroundProcessing() {
     backgroundScrollY++;
 
     // Check for end of background rendering
-    if (backgroundScrollY >= SCANLINE_HEIGHT) {
+    if (backgroundScrollY >= SCANLINE_HEIGHT)
+    {
         backgroundScrollY = 0; // Reset scroll position for the next frame
     }
 }
 
-void GbPPU::synchronizeWithOtherComponents() {
-
+void GbPPU::synchronizeWithOtherComponents()
+{
 }
 
-void GbPPU::renderPixel(uint8_t tileData, int tilePixelX, int tilePixelY, int screenX, int screenY) {
+void GbPPU::renderPixel(uint8_t tileData, int tilePixelX, int tilePixelY, int screenX, int screenY)
+{
     // Determine the bit offset for the pixel within the tile data
     int bitOffset = (7 - tilePixelX);
 
@@ -217,19 +245,25 @@ void GbPPU::renderPixel(uint8_t tileData, int tilePixelX, int tilePixelY, int sc
     screenBuffer[index] = colorValue;
 }
 
-uint8_t GbPPU::getColorFromPalette(int index) {
+uint8_t GbPPU::getColorFromPalette(int index)
+{
     // Ensure index is within bounds
-    if (index >= 0 && index < PALETTE_SIZE) {
+    if (index >= 0 && index < PALETTE_SIZE)
+    {
         return palette[index];
-    } else {
+    }
+    else
+    {
         // Handle out-of-bounds index (could also return a default color)
         return 0xFF; // Default to white
     }
 }
 
-void GbPPU::renderSprites() {
+void GbPPU::renderSprites()
+{
     // Iterate through sprite attributes in the OAM
-    for (int i = 0; i < OAM_SIZE; i += 4) {
+    for (int i = 0; i < OAM_SIZE; i += 4)
+    {
         // Read sprite attributes from OAM
         uint8_t yPos = memory->read(OAM_ADDR + i) - 16; // Sprite Y position
         uint8_t xPos = memory->read(OAM_ADDR + i + 1) - 8; // Sprite X position
@@ -237,7 +271,8 @@ void GbPPU::renderSprites() {
         uint8_t attributes = memory->read(OAM_ADDR + i + 3); // Sprite attributes
 
         // Determine if sprite is within the current scanline
-        if (currentScanline >= yPos && currentScanline < yPos + TILE_DIMENSION) {
+        if (currentScanline >= yPos && currentScanline < yPos + TILE_DIMENSION)
+        {
             // Calculate the pixel row within the sprite
             int tilePixelY = currentScanline - yPos;
 
@@ -245,7 +280,8 @@ void GbPPU::renderSprites() {
             bool flipY = attributes & 0x40;
 
             // Adjust tile index if sprite is flipped vertically
-            if (flipY) {
+            if (flipY)
+            {
                 tilePixelY = TILE_DIMENSION - 1 - tilePixelY;
             }
 
@@ -258,7 +294,8 @@ void GbPPU::renderSprites() {
             uint8_t tileData2 = memory->read(tileDataAddress + tilePixelY * 2 + 1);
 
             // Iterate through each pixel of the tile
-            for (int tilePixelX = 0; tilePixelX < TILE_DIMENSION; ++tilePixelX) {
+            for (int tilePixelX = 0; tilePixelX < TILE_DIMENSION; ++tilePixelX)
+            {
                 // Determine if sprite is flipped horizontally
                 bool flipX = attributes & 0x20;
 
@@ -269,19 +306,21 @@ void GbPPU::renderSprites() {
                 int screenX = xPos + tilePixelX;
 
                 // Check if the pixel is within the visible screen area
-                if (screenX >= 0 && screenX < SCANLINE_WIDTH) {
+                if (screenX >= 0 && screenX < SCANLINE_WIDTH)
+                {
                     // Calculate the index of the pixel in the screen buffer
                     int index = currentScanline * SCANLINE_WIDTH + screenX;
 
                     // Fetch the color palette index for the current pixel from the tile data
                     uint8_t colorIndex = ((tileData1 >> (7 - pixelX)) & 0x01) |
-                                         (((tileData2 >> (7 - pixelX)) & 0x01) << 1);
+                        (((tileData2 >> (7 - pixelX)) & 0x01) << 1);
 
                     // Check if the sprite has priority over the background
                     bool priority = attributes & 0x80;
 
                     // Render the pixel if it's non-zero and has priority, or if it's zero and the background is transparent
-                    if ((colorIndex != 0 && priority) || (colorIndex != 0 && screenBuffer[index] == 0)) {
+                    if ((colorIndex != 0 && priority) || (colorIndex != 0 && screenBuffer[index] == 0))
+                    {
                         screenBuffer[index] = getColorFromPalette(colorIndex);
                     }
                 }
@@ -289,5 +328,3 @@ void GbPPU::renderSprites() {
         }
     }
 }
-
-

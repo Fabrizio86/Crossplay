@@ -48,9 +48,9 @@ void GbCpu::initLdl() {
     };
 
     this->opCodes[Instruction::LD_SP_nn] = [this]() {
-        uint16_t nn = this->memory->readWord(this->registers.regPC);
-        this->registers.regSP = nn;
-        this->registers.regPC += 2;
+        uint8_t lowByte = this->memory->read(this->registers.regPC++);
+        uint8_t highByte = this->memory->read(this->registers.regPC++);
+        this->registers.regSP = (static_cast<uint16_t>(highByte) << 8) | lowByte;
     };
 
     this->opCodes[Instruction::LD_nn_A] = [this]() {

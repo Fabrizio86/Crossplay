@@ -6,6 +6,7 @@
 #define CROSSPLAY_GBPPU_H
 
 #include <vector>
+#include <SFML/Graphics/RenderWindow.hpp>
 
 #include "../Interfaces/IMemory.h"
 #include "InterruptController.h"
@@ -17,7 +18,10 @@ public:
 
     void exec();
 
+    sf::RenderWindow* window;
+
 private:
+
     IMemory *memory;
 
     uint32_t cycles = 0;

@@ -4,41 +4,40 @@
 //
 #include "GbCpu.h"
 
+void conditionalJump(uint16_t &regPC, bool condition, int8_t offset) {
+    if (condition) {
+        regPC += offset;
+    } else {
+        // Skip the offset byte
+        regPC++;
+    }
+}
+
 void GbCpu::initJ() {
 
     this->opCodes[Instruction::JR_NC_e] = [this]() {
-        int8_t offset = this->memory->read(this->registers.regPC++);
-
-        if (this->flags.carry) return;
-        this->registers.regPC += offset;
+        int8_t offset = static_cast<int8_t>(this->memory->read(this->registers.regPC++));
+        conditionalJump(this->registers.regPC, !this->flags.carry, offset);
     };
 
     this->opCodes[Instruction::JR_NZ_n] = [this]() {
-        int8_t offset = this->memory->read(this->registers.regPC++);
-
-        if (this->flags.zero) return;
-        this->registers.regPC += offset;
+        int8_t offset = static_cast<int8_t>(this->memory->read(this->registers.regPC++));
+        conditionalJump(this->registers.regPC, !this->flags.zero, offset);
     };
 
     this->opCodes[Instruction::JR_Z_n] = [this]() {
-        int8_t offset = this->memory->read(this->registers.regPC++);
-
-        if (this->flags.zero) return;
-        this->registers.regPC += offset;
+        int8_t offset = static_cast<int8_t>(this->memory->read(this->registers.regPC++));
+        conditionalJump(this->registers.regPC, this->flags.zero, offset);
     };
 
     this->opCodes[Instruction::JR_NC_n] = [this]() {
-        int8_t offset = this->memory->read(this->registers.regPC++);
-
-        if (this->flags.carry) return;
-        this->registers.regPC += offset;
+        int8_t offset = static_cast<int8_t>(this->memory->read(this->registers.regPC++));
+        conditionalJump(this->registers.regPC, !this->flags.carry, offset);
     };
 
     this->opCodes[Instruction::JR_C_n] = [this]() {
-        int8_t offset = this->memory->read(this->registers.regPC++);
-
-        if (!this->flags.carry) return;
-        this->registers.regPC += offset;
+        int8_t offset = static_cast<int8_t>(this->memory->read(this->registers.regPC++));
+        conditionalJump(this->registers.regPC, this->flags.carry, offset);
     };
 
     this->opCodes[Instruction::JP_NZ_nn] = [this]() {

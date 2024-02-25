@@ -7,10 +7,8 @@
 void GbCpu::initLdh() {
 
     this->opCodes[Instruction::LD_HL_nn] = [this]() {
-        uint16_t nn = this->memory->readWord(this->registers.regPC);  // Fetch the next two bytes (16 bits value)
-        this->registers.regH = (nn >> 8) & 0xFF; // Store high byte in H register
-        this->registers.regL = nn & 0xFF; // Store low byte in L register
-        this->registers.regPC += 2;
+        this->registers.regL = this->memory->read(this->registers.regPC++);
+        this->registers.regH = this->memory->read(this->registers.regPC++);
     };
 
     this->opCodes[Instruction::LD_HLI_A] = [this]() {
