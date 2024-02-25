@@ -107,6 +107,8 @@ void GbCpu::initC() {
         this->registers.regPC = address;
     };
 
+    this->opCodes[Instruction::CALL_IY_nn] = [this]() {    };
+
     this->opCodes[Instruction::CP_n] = [this]() {
         uint8_t value = this->memory->read(this->registers.regPC);
         this->registers.regPC++;

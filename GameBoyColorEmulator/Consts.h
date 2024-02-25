@@ -92,6 +92,4 @@ struct OamEntry {
     unsigned bgp: 1;
 };
 
-static sf::RenderWindow* const window = new sf::RenderWindow(sf::VideoMode(SCANLINE_WIDTH * 3, SCANLINE_HEIGHT * 3), "Game Boy Color Emulator");
-
 #endif //CONSTS_H

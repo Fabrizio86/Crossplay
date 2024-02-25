@@ -61,6 +61,9 @@ set(SOURCE_FILES
         Cpu/GbCpu.initJ.cpp
         Cpu/GbCpu.initC.cpp
         Cpu/GbCpu.initPushPop.cpp
+        Cpu/PrefixCb/GbCpu.PrefixCb.InitR.cpp
+        Cpu/PrefixCb/GbCpu.PrefixCb.InitS.cpp
+        Cpu/PrefixCb/GbCpu.PrefixCb.InitB.cpp
 )
 
 # Create the library

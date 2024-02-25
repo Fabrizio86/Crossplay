@@ -13,4 +13,11 @@ using OpcodeHandler = std::function<void()>;
 using uchar = unsigned char;
 using ISRFunctionPtr = std::function<void()>;
 
+enum LogicalOperation {
+    AND,
+    OR,
+    NOT,
+    XOR
+};
+
 #endif //CROSSPLAY_DEFINITIONS_H

@@ -18,8 +18,8 @@ void GbCpu::initPushPop() {
     };
 
     this->opCodes[Instruction::PREFIX_CB] = [this]() {
-        std::cout << "PREFIX_CB called" << std::endl;
-        this->registers.regPC++;
+        PrefixCB pfxOpcode = static_cast<PrefixCB>(this->memory->read(++this->registers.regPC));
+        this->prefixCbOpcodes[pfxOpcode]();
     };
 
     this->opCodes[Instruction::POP_DE] = [this]() {

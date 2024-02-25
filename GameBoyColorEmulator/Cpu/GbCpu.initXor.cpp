@@ -7,7 +7,7 @@
 
 void GbCpu::performBitwiseXorAndUpdateFlags(uint8_t &registerA, uint8_t value) {
     registerA ^= value;
-    updateFlagsAfterLogicalOperation(registerA, false);
+    updateFlagsAfterLogicalOperation(registerA, LogicalOperation::XOR);
 }
 
 void GbCpu::initXor() {
@@ -46,32 +46,32 @@ void GbCpu::initXor() {
 
     this->opCodes[Instruction::OR_B] = [this]() {
         this->registers.regA |= this->registers.regB;
-        updateFlagsAfterLogicalOperation(this->registers.regA, false);
+        updateFlagsAfterLogicalOperation(this->registers.regA, LogicalOperation::OR);
     };
 
     this->opCodes[Instruction::OR_C] = [this]() {
         this->registers.regA |= this->registers.regC;
-        updateFlagsAfterLogicalOperation(this->registers.regA, false);
+        updateFlagsAfterLogicalOperation(this->registers.regA, LogicalOperation::OR);
     };
 
     this->opCodes[Instruction::OR_D] = [this]() {
         this->registers.regA |= this->registers.regD;
-        updateFlagsAfterLogicalOperation(this->registers.regA, false);
+        updateFlagsAfterLogicalOperation(this->registers.regA, LogicalOperation::OR);
     };
 
     this->opCodes[Instruction::OR_E] = [this]() {
         this->registers.regA |= this->registers.regE;
-        updateFlagsAfterLogicalOperation(this->registers.regA, false);
+        updateFlagsAfterLogicalOperation(this->registers.regA, LogicalOperation::OR);
     };
 
     this->opCodes[Instruction::OR_H] = [this]() {
         this->registers.regA |= this->registers.regH;
-        updateFlagsAfterLogicalOperation(this->registers.regA, false);
+        updateFlagsAfterLogicalOperation(this->registers.regA, LogicalOperation::OR);
     };
 
     this->opCodes[Instruction::OR_L] = [this]() {
         this->registers.regA |= this->registers.regL;
-        updateFlagsAfterLogicalOperation(this->registers.regA, false);
+        updateFlagsAfterLogicalOperation(this->registers.regA, LogicalOperation::OR);
     };
 
     this->opCodes[Instruction::OR_HLptr] = [this]() {
@@ -79,24 +79,24 @@ void GbCpu::initXor() {
         uint8_t memoryValue = this->memory->read(address);
         this->registers.regA |= memoryValue;
 
-        updateFlagsAfterLogicalOperation(this->registers.regA, false);
+        updateFlagsAfterLogicalOperation(this->registers.regA, LogicalOperation::OR);
     };
 
     this->opCodes[Instruction::OR_A] = [this]() {
-        updateFlagsAfterLogicalOperation(this->registers.regA, false);
+        updateFlagsAfterLogicalOperation(this->registers.regA, LogicalOperation::OR);
     };
 
     this->opCodes[Instruction::OR_n] = [this]() {
         uint8_t value = this->memory->read(this->registers.regPC++);
         this->registers.regA |= value;
-        updateFlagsAfterLogicalOperation(this->registers.regA, false);
+        updateFlagsAfterLogicalOperation(this->registers.regA, LogicalOperation::OR);
     };
 
     this->opCodes[Instruction::XOR_n] = [this]() {
         uint8_t n = this->memory->read(this->registers.regPC++);
         this->registers.regA ^= n;
 
-        updateFlagsAfterLogicalOperation(this->registers.regA, false);
+        updateFlagsAfterLogicalOperation(this->registers.regA, LogicalOperation::XOR);
     };
 
 }

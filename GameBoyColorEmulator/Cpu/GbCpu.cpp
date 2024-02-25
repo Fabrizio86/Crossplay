@@ -9,6 +9,8 @@
 #include <iostream>
 
 void GbCpu::exec() {
+    std::cout << "------------begin of loop -------------" << std::endl;
+
     if (this->halted)
         return;
 
@@ -16,19 +18,18 @@ void GbCpu::exec() {
         throw StopCPUException();
 
     if (this->interruptEnabled && this->interruptController->isInterruptRequests()) {
+        std::cout << "in the interrupt" << std::endl;
         this->saveState();
         this->isr->handleInterrupt();
         this->restoreState();
     }
 
-    opcode = (Instruction) this->memory->read(registers.regPC);
-    registers.regPC++;
+    opcode = static_cast<Instruction>(this->memory->read(this->registers.regPC++));
 
-    if (opcode == Instruction::PREFIX_CB) {
-        // needs to implement the cb commands
-    }
+    std::cout << "SP: " << std::dec << this->registers.regSP << " PC: " << std::hex << registers.regPC << " OpcCode: " << std::hex << (int)opcode << std::endl;
 
     opCodes[opcode]();
+    //this->registers.regPC++;
 }
 
 void GbCpu::reset() {
@@ -57,8 +58,9 @@ GbCpu::GbCpu(IMemory *memory, InterruptController *ic, ISR *isr) :
         memory(memory),
         interruptController(ic),
         isr(isr) {
-
     this->reset();
+
+    this->registers.regPC = 0;
 
     for (int i = 1; i < 256; ++i) {
         this->opCodes[i] = [i]() { std::cout << "not implemented, opt code: " << i << std::endl; };
@@ -82,8 +84,12 @@ GbCpu::GbCpu(IMemory *memory, InterruptController *ic, ISR *isr) :
     this->initJ();
     this->initC();
     this->initPushPop();
+    this->initRcodes();
+    this->initScodes();
+    this->initBcodes();
 
-    this->opCodes[Instruction::NOP] = []() {};
+    this->opCodes[Instruction::NOP] = []() {
+    };
 
     this->opCodes[Instruction::STOP] = [this]() {
         this->stopped = true;
@@ -127,15 +133,25 @@ void GbCpu::updateFlagsAfterSubtraction(uint8_t result, uint8_t operand1, uint8_
     this->flags.carry = (operand2 > operand1);
 }
 
-void GbCpu::updateFlagsAfterLogicalOperation(uint8_t value, bool isAndOperation) {
+void GbCpu::updateFlagsAfterLogicalOperation(uint8_t value, LogicalOperation operation) {
     // Zero flag: set if the result is zero
     this->flags.zero = (value == 0);
 
     // Subtract flag: reset after a logical operation
     this->flags.subtract = false;
 
-    // Half Carry flag: set after an AND operation, reset otherwise
-    this->flags.halfCarry = isAndOperation;
+    // Half Carry flag: set or reset based on the logical operation
+    switch (operation) {
+        case AND:
+        case OR:
+            this->flags.halfCarry = false;
+            break;
+        case XOR:
+            this->flags.halfCarry = true;
+            break;
+        default:
+            break;
+    }
 
     // Carry flag: reset after a logical operation
     this->flags.carry = false;

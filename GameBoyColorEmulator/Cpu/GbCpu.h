@@ -16,9 +16,10 @@
 #include <unordered_map>
 #include <string>
 
-class GbCpu : public ICpu {
+class GbCpu : public ICpu
+{
 public:
-    GbCpu(IMemory *memory, InterruptController *ic, ISR *isr);
+    GbCpu(IMemory* memory, InterruptController* ic, ISR* isr);
 
     ~GbCpu() override = default;
 
@@ -32,16 +33,17 @@ private:
 
     Instruction opcode;
     std::array<OpcodeHandler, 256> opCodes;
+    std::array<OpcodeHandler, 256> prefixCbOpcodes;
 
-    IMemory *memory;
+    IMemory* memory;
     Registers registers;
     Flags flags;
     bool interruptEnabled;
 
     Registers savedRegisters;
     Flags savedFlags;
-    InterruptController *interruptController;
-    ISR *isr;
+    InterruptController* interruptController;
+    ISR* isr;
 
 private:
     void saveState();
@@ -52,9 +54,9 @@ private:
 
     void updateFlagsAfterAddition(uint8_t result, uint8_t operand1, uint8_t operand2);
 
-    void updateFlagsAfterLogicalOperation(uint8_t value, bool isAndOperation);
+    void updateFlagsAfterLogicalOperation(uint8_t value, LogicalOperation operation);
 
-    void performBitwiseXorAndUpdateFlags(uint8_t &registerA, uint8_t value);
+    void performBitwiseXorAndUpdateFlags(uint8_t& registerA, uint8_t value);
 
     void resetRegistersAndDisableInterrupts(uint16_t currentPc, uint16_t newPcValue);
 
@@ -97,6 +99,12 @@ private:
     void initC();
 
     void initPushPop();
+
+    void initRcodes();
+
+    void initScodes();
+
+    void initBcodes();
 
     uint16_t popFromStack();
 };

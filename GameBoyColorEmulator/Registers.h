@@ -40,13 +40,8 @@ struct Registers {
     uint16_t regPC;  // Program Counter
     uint16_t regSP;  // Stack Pointer
 
-    Registers() {
-        this->reset();
-    }
-
     void reset() {
         memset(this, 0, sizeof(Registers));
-        regA = 0x01;
         regSP = INITIAL_SP_ADDRESS;
         regPC = INITIAL_ROM_ADDRESS;
     }

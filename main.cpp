@@ -35,7 +35,7 @@ int main() {
     ISR isr(&ic, &ivt);
     ICpu *cpu = new GbCpu(bus, &ic, &isr);
     IPPU *ppu = new GbPPU(bus, &ic);
-    Clock clock(4.20, cpu, ppu);
+    Clock clock(14.20, cpu, ppu);
 
     loadGbcRom("/Users/fabriziopaino/CrossPlay/PR.gb", bus);
 
