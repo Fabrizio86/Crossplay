@@ -64,6 +64,9 @@ set(SOURCE_FILES
         Cpu/PrefixCb/GbCpu.PrefixCb.InitR.cpp
         Cpu/PrefixCb/GbCpu.PrefixCb.InitS.cpp
         Cpu/PrefixCb/GbCpu.PrefixCb.InitB.cpp
+        Cartridges/Cartridge.cpp
+        Cartridges/Cartridge.h
+        Cartridges/CartridgeHeader.h
 )
 
 # Create the library
