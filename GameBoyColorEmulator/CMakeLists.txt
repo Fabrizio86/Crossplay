@@ -12,12 +12,12 @@ set(SOURCE_FILES
         Cpu/GbCpu.h
         Cpu/GbCpu.cpp
         Registers.h
-        InterruptController.h
-        InterruptController.cpp
-        InterruptVectorTable.cpp
-        InterruptVectorTable.h
-        ISR.cpp
-        ISR.h
+        Interrupts/InterruptController.h
+        Interrupts/InterruptController.cpp
+        Interrupts/InterruptVectorTable.cpp
+        Interrupts/InterruptVectorTable.h
+        Interrupts/ISR.cpp
+        Interrupts/ISR.h
         Bus.cpp
         Bus.h
         Consts.h
@@ -38,10 +38,8 @@ set(SOURCE_FILES
         MBC/MBC6.h
         MBC/MBC7.cpp
         MBC/MBC7.h
-        MBC/CartridgeHeader.cpp
-        MBC/CartridgeHeader.h
-        GbPPU.cpp
-        GbPPU.h
+        PPU/GbPPU.cpp
+        PPU/GbPPU.h
         Cpu/GbCpu.initXor.cpp
         Cpu/GbCpu.initRst.cpp
         Cpu/GbCpu.initLdb.cpp
@@ -64,9 +62,12 @@ set(SOURCE_FILES
         Cpu/PrefixCb/GbCpu.PrefixCb.InitR.cpp
         Cpu/PrefixCb/GbCpu.PrefixCb.InitS.cpp
         Cpu/PrefixCb/GbCpu.PrefixCb.InitB.cpp
+        PPU/LcdControl.h
         Cartridges/Cartridge.cpp
         Cartridges/Cartridge.h
         Cartridges/CartridgeHeader.h
+        Memory/Memory.cpp
+        Memory/Bank.cpp
 )
 
 # Create the library

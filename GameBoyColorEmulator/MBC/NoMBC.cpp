@@ -4,7 +4,7 @@
 
 #include "NoMBC.h"
 
-NoMBC::NoMBC(const std::vector<uint8_t> &romData) : rom(romData) {}
+NoMBC::NoMBC(const std::vector<char> &romData) : rom(romData) {}
 
 uint8_t NoMBC::read(uint16_t address) {
     // Check if the address is within the ROM range

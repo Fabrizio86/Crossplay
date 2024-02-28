@@ -4,18 +4,23 @@
 #ifndef CARTRIDGE_H
 #define CARTRIDGE_H
 
-#include <string>
 #include <vector>
 
 #include "CartridgeHeader.h"
 
 class Cartridge {
 public:
-    Cartridge(std::string path);
+    Cartridge() = default;
+
+    void load(std::string path);
+
+    [[nodiscard]] std::vector<char> rom_data() const;
+
+    [[nodiscard]] CartridgeHeader header() const;
 
 private:
-    std::vector<u_int8_t> data;
-    CartridgeHeader header;
+    std::vector<char> romData;
+    CartridgeHeader headerInfo;
 };
 
 #endif //CARTRIDGE_H

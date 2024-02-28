@@ -4,7 +4,7 @@
 
 #include "mbc2.h"
 
-MBC2::MBC2(const std::vector<uint8_t> &romData, const std::vector<uint8_t> &ramData)
+MBC2::MBC2(const DataBuffer &romData, const DataBuffer &ramData)
         : rom(romData), ram(ramData), romBank(1), ramEnabled(false) {}
 
 uint8_t MBC2::read(uint16_t address) {

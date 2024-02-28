@@ -6,18 +6,16 @@
 #ifndef CROSSPLAY_CLOCK_H
 #define CROSSPLAY_CLOCK_H
 
-#include <condition_variable>
-#include <mutex>
-
 #include "Definitions.h"
 #include "Interfaces/ICpu.h"
 #include "Interfaces/IPPU.h"
 
-class Clock {
+class Clock
+{
 public:
     ~Clock() = default;
 
-    Clock(double freqMHz, ICpu *cpu, IPPU *ppu);
+    Clock(double cpuFreqMHz, double ppuFreqMHz, ICpu* cpu, IPPU* ppu);
 
     void start();
 
@@ -25,14 +23,10 @@ public:
 
 private:
     bool running;
-    uint freq;
-    ICpu *cpu;
-    IPPU *ppu;
-
-    bool cpuCycleCompleted = false;
-    std::mutex m;
-    std::condition_variable cv;
-
+    uint cpuFreq;
+    uint ppuFreq;
+    ICpu* cpu;
+    IPPU* ppu;
 };
 
 #endif //CROSSPLAY_CLOCK_H

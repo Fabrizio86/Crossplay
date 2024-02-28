@@ -7,18 +7,19 @@
 
 #include <vector>
 #include "../../Interfaces/IMBC.h"
+#include "../../Definitions.h"
 
 class MBC5 : public IMBC {
 public:
-    MBC5(const std::vector<uint8_t> &romData, const std::vector<uint8_t> &ramData);
+    MBC5(const DataBuffer &romData, const DataBuffer &ramData);
 
     uint8_t read(uint16_t address) override;
 
     void write(uint16_t address, uint8_t data) override;
 
 private:
-    std::vector<uint8_t> rom;
-    std::vector<uint8_t> ram;
+    DataBuffer rom;
+    DataBuffer ram;
     uint16_t romBank;
     uint8_t ramBank;
     bool ramEnabled;

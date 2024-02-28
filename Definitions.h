@@ -13,7 +13,11 @@ using OpcodeHandler = std::function<void()>;
 using uchar = unsigned char;
 using ISRFunctionPtr = std::function<void()>;
 
-enum LogicalOperation {
+using ui8 = uint8_t;
+using DataBuffer = std::vector<char>;
+
+enum LogicalOperation
+{
     AND,
     OR,
     NOT,

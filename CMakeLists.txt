@@ -3,6 +3,7 @@ project(CrossPlay)
 
 # Replace with the actual path to SFML
 set(SFML_DIR "/opt/homebrew/opt/sfml")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
 
 # Find SFML package
 find_package(SFML 2.5 COMPONENTS graphics window system REQUIRED)

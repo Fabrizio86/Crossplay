@@ -4,7 +4,7 @@
 #include "MBC4.h"
 #include "../Consts.h"
 
-MBC4::MBC4(const std::vector<uint8_t> &romData, const std::vector<uint8_t> &ramData)
+MBC4::MBC4(const DataBuffer &romData, const DataBuffer &ramData)
         : rom(romData), ram(ramData), romBank(1), ramBank(0), ramEnabled(false), mode(Mode::RomBanking) {
 }
 

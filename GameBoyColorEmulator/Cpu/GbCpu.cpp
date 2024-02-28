@@ -9,8 +9,6 @@
 #include <iostream>
 
 void GbCpu::exec() {
-    std::cout << "------------begin of loop -------------" << std::endl;
-
     if (this->halted)
         return;
 
@@ -26,10 +24,9 @@ void GbCpu::exec() {
 
     opcode = static_cast<Instruction>(this->memory->read(this->registers.regPC++));
 
-    std::cout << "SP: " << std::dec << this->registers.regSP << " PC: " << std::hex << registers.regPC << " OpcCode: " << std::hex << (int)opcode << std::endl;
+   // std::cout << "SP: " << std::dec << this->registers.regSP << " PC: " << std::hex << registers.regPC << " OpcCode: " << std::hex << (int)opcode << std::endl;
 
     opCodes[opcode]();
-    //this->registers.regPC++;
 }
 
 void GbCpu::reset() {
@@ -42,6 +39,8 @@ void GbCpu::reset() {
     this->registers.reset();
     this->stopped = false;
     this->halted = false;
+
+    std::cout << std::hex << this->registers.regPC << std::endl;
 }
 
 void GbCpu::saveState() {
@@ -58,9 +57,6 @@ GbCpu::GbCpu(IMemory *memory, InterruptController *ic, ISR *isr) :
         memory(memory),
         interruptController(ic),
         isr(isr) {
-    this->reset();
-
-    this->registers.regPC = 0;
 
     for (int i = 1; i < 256; ++i) {
         this->opCodes[i] = [i]() { std::cout << "not implemented, opt code: " << i << std::endl; };

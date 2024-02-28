@@ -4,7 +4,7 @@
 
 #include "MBC3.h"
 
-MBC3::MBC3(const std::vector<uint8_t>& romData, const std::vector<uint8_t>& ramData)
+MBC3::MBC3(const DataBuffer& romData, const DataBuffer& ramData)
         : rom(romData), ram(ramData), romBank(1), ramBank(0), ramEnabled(false), rtcEnabled(false), rtcLatch(false),
           rtcSeconds(0), rtcMinutes(0), rtcHours(0), rtcDays(0), rtcLatchValue(0)
 {

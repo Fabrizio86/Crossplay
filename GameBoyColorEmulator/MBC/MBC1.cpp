@@ -55,7 +55,13 @@ void MBC1::write(uint16_t address, uint8_t data) {
     }
 }
 
-MBC1::MBC1(const std::vector<uint8_t> &romData, const std::vector<uint8_t> &ramData)
+MBC1::MBC1(const DataBuffer &romData, const DataBuffer &ramData)
         : rom(romData), ram(ramData),
           currentRomBank(1), currentRamBank(0),
-          romBankingMode(true), ramEnabled(false) {}
+          romBankingMode(true), ramEnabled(false)
+{
+    if(this->ram.size() < RAM_BANK_SIZE)
+    {
+        this->ram.resize(RAM_BANK_SIZE);
+    }
+}

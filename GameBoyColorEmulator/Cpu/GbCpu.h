@@ -10,11 +10,9 @@
 #include "../../Definitions.h"
 #include "../Registers.h"
 #include "../../Interfaces/IMemory.h"
-#include "../InterruptController.h"
-#include "../ISR.h"
+#include "../Interrupts/InterruptController.h"
+#include "../Interrupts/ISR.h"
 #include "../Instruction.h"
-#include <unordered_map>
-#include <string>
 
 class GbCpu : public ICpu
 {

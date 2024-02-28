@@ -9,10 +9,14 @@
 #include "../Interfaces/IMemory.h"
 #include "../Definitions.h"
 #include "../Interfaces/IMBC.h"
+#include "Memory/Memory.h"
+
 #include "Consts.h"
-#include "InterruptController.h"
+#include "Interrupts/InterruptController.h"
 
 #include <string>
+
+#include "Cartridges/Cartridge.h"
 
 class Bus final : public IMemory
 {
@@ -29,25 +33,42 @@ public:
 
     void writeWord(uint16_t address, uint16_t value) override;
 
-    void loadRom(const std::vector<uint8_t>& romData);
+    void loadRom(std::string path);
 
     void performDMA(uint8_t address);
 
 private:
     std::unique_ptr<IMBC> mbc; // The memory bank controller
     InterruptController* ic;
+    Cartridge cartridge;
+
+    // todo: these line below need cleaning up
+    Memory ram;
+    Memory wram;
+    Memory vram;
+    Memory oam;
+    Memory hram;
+
 
     std::array<uint8_t, 256> bootRom;
-    uint8_t videoRam[CARTRIDGE_RAM_SIZE];
-    uint8_t workRam[CARTRIDGE_RAM_SIZE];
-    uint8_t oam[MAX_SPRITES];
-    uint8_t ioPorts[IO_REGISTER_SIZE];
-    uint8_t hRam[HRAM_SIZE];
     InterruptFlags iFlags;
+
+    uint8_t ioPorts[IO_REGISTER_SIZE];
+    uint8_t lcdControl;
+    uint8_t bgpIndex;
+    uint8_t obpIndex;
+    uint8_t autoIncrement;
+
+    uint16_t serialTransfer;
+    uint32_t timerAndDivider;
+
+    uint16_t bgPaletteData[8][2];
+    uint16_t objPaletteData[8][2];
 
     bool ramEnabled;
 
-    void loadPaletteData(const std::vector<uint8_t>& romData);
+    void loadPaletteData();
+    void createMBC();
 
     // I/O state
     uint8_t joypadRegister = 0xFF; // Joypad register, stored at address 0xFF00
@@ -59,6 +80,9 @@ private:
     bool buttonSelect = false; // Current state of the "select" button
     bool buttonB = false; // Current state of the "B" button
     bool buttonA = false; // Current state of the "A" button
+
+private:
+    void ioWrite(uint32_t address, uint8_t value);
 };
 
 

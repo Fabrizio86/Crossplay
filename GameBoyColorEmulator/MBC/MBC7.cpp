@@ -3,7 +3,7 @@
 //
 #include "MBC7.h"
 
-MBC7::MBC7(const std::vector<uint8_t> &romData, const std::vector<uint8_t> &ramData)
+MBC7::MBC7(const DataBuffer &romData, const DataBuffer &ramData)
         : rom(romData), ram(ramData), romBank(1), ramBank(0), ramEnabled(false), rtcEnabled(false) {
 }
 

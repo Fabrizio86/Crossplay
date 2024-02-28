@@ -8,10 +8,11 @@
 #include <cstdint>
 #include <vector>
 #include "../../Interfaces/IMBC.h"
+#include "../../Definitions.h"
 
 class MBC3 : public IMBC {
 public:
-    MBC3(const std::vector<uint8_t> &romData, const std::vector<uint8_t> &ramData);
+    MBC3(const DataBuffer &romData, const DataBuffer &ramData);
 
     uint8_t read(uint16_t address);
 
@@ -19,8 +20,8 @@ public:
 
 private:
     // ROM and RAM frameBuffer
-    std::vector<uint8_t> rom;
-    std::vector<uint8_t> ram;
+    DataBuffer rom;
+    DataBuffer ram;
 
     // MBC3 registers
     uint8_t romBank;

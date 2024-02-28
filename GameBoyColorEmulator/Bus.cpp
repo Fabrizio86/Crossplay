@@ -67,6 +67,10 @@ uint8_t Bus::read(uint32_t address) const
             // Joypad register
             return joypadRegister;
         }
+        else if (address == 0xFF40)
+        {
+            return this->lcdControl;
+        }
         else
         {
             return ioPorts[address - 0xFF00];
@@ -86,70 +90,71 @@ uint8_t Bus::read(uint32_t address) const
     }
 }
 
+/**
+ * @brief Writes a byte to the specified address in the Bus memory.
+ *
+ * @param address The address to write the byte to.
+ * @param value The value to write.
+ */
 void Bus::writeByte(uint32_t address, uint8_t value)
 {
-    if (address < 0x8000)
+    // write from rom
+    if (address < CARTRIDGE_ROM_SIZE)
     {
-        // ROM bank 00~NN
-        mbc->write(address, value);
+        this->mbc->write(address, value);
     }
+
+    // write to video ram
     else if (address < 0xA000)
     {
-        // 8KB Video RAM
-        videoRam[address - 0x8000] = value;
+        const int bankIndex = (lcdControl >> 4) & 1;
+        this->vram.write(address - CARTRIDGE_ROM_SIZE, bankIndex, value);
     }
+
+    // write to External RAM
     else if (address < WORK_RAM_BASE)
     {
-        // 8KB External RAM
         mbc->write(address, value);
     }
+
+    // write to work ram
     else if (address < ECHO_RAM_BASE)
     {
-        // 8KB Work RAM
-        workRam[address - WORK_RAM_BASE] = value;
-        // Mirror the write to the echo RAM
-        workRam[address - WORK_RAM_BASE + 0x2000] = value;
+        const int bankIndex = (lcdControl >> 3) & 1;
+        this->wram.write(address - WORK_RAM_BASE, bankIndex, value);
     }
-    else if (address < OAM_ADDR)
+
+    // write to mirror
+    else if (address < 0xFE00)
     {
-        uint16_t mirroredAddress = (address - ECHO_RAM_BASE) % 0x2000 + WORK_RAM_BASE;
-        workRam[address - ECHO_RAM_BASE] = value;
-        // Mirror the write to the original Work RAM
-        workRam[mirroredAddress - WORK_RAM_BASE] = value;
+        this->writeByte(address - 0x2000, value);
     }
+
+    // write to oam
     else if (address < 0xFEA0)
     {
-        // Sprite attribute table (OAM)
-        oam[address - OAM_ADDR] = value;
+        this->oam.write(address - OAM_ADDR, 0, value);
     }
+
+    // write to blocked address
     else if (address < 0xFF00)
     {
-        // Not usable
-        // Not writable, do nothing
+        std::cout << "Write attempt to unusable memory " << address << std::endl;
     }
-    else if (address == 0xFF46)
-    {
-        DMA_VALUE = value;
-        this->ic->requestInterrupt(InterruptType::DMA);
-    }
+
+    // write to io ports
     else if (address < 0xFF80)
     {
-        // I/O ports
-        if (address == 0xFF00)
-        {
-            // Joypad register
-            joypadRegister = value;
-        }
-        else
-        {
-            ioPorts[address - 0xFF00] = value;
-        }
+        this->ioWrite(address, value);
     }
+
+    // write to high ram
     else if (address < 0xFFFF)
     {
-        // High RAM (HRAM)
-        hRam[address - 0xFF80] = value;
+        this->hram.write(address - 0xFF80, 0, value);
     }
+
+    // write to interrupt flags
     else if (address == 0xFFFF)
     {
         std::cout << "Interrupt flag: " << (int)value << std::endl;
@@ -166,20 +171,104 @@ uint16_t Bus::readWord(uint16_t address)
 
 void Bus::writeWord(uint16_t address, uint16_t value)
 {
-    // Write the high byte
     writeByte(address, value >> 8);
-    // Write the low byte
     writeByte(address + 1, value & 0xFF);
+}
+
+void Bus::ioWrite(uint32_t address, uint8_t value)
+{
+    switch (address)
+    {
+    case 0xFF00:
+        break;
+    }
+
+
+    if (address == 0xFF46)
+    {
+        DMA_VALUE = value;
+    }
+
+    else if (address == 0xFF68)
+    {
+        this->bgpIndex = (value & 0x3F);
+        this->autoIncrement = value >> 7;
+    }
+    else if (address == 0xFF6A)
+    {
+        this->obpIndex = (value & 0x3F);
+        this->autoIncrement = value >> 7;
+    }
+    else if (address >= 0xFF69 && address <= 0xFF6F)
+    {
+        if (address % 2 == 0)
+        {
+            this->bgPaletteData[this->bgpIndex][0] = value; // Write to the high intensity byte of the selected background palette entry
+        }
+        else
+        {
+            this->bgPaletteData[this->bgpIndex][1] = value; // Write to the low intensity byte of the selected background palette entry
+        }
+
+        if (this->autoIncrement)
+        {
+            this->bgpIndex = (this->bgpIndex + 1) % 8; // Increment the background palette index cyclically
+        }
+    }
+    else if (address >= 0xFF6A && address <= 0xFF6F)
+    {
+        if (address % 2 == 0)
+        {
+            this->objPaletteData[this->obpIndex][0] = value; // Write to the high intensity byte of the selected object palette entry
+        }
+        else
+        {
+            this->objPaletteData[this->obpIndex][1] = value; // Write to the low intensity byte of the selected object palette entry
+        }
+
+        if (this->autoIncrement)
+        {
+            this->obpIndex = (this->obpIndex + 1) % 8; // Increment the object palette index cyclically
+        }
+    }
+    else if (address < 0xFF80)
+    {
+        // I/O ports
+        if (address == 0xFF00)
+        {
+            // Joypad register
+            this->joypadRegister = value;
+        }
+        else if (address < 0xff3)
+        {
+        }
+        else if (address < 0xff08)
+        {
+        }
+        else if (address < 0xff27)
+        {
+        }
+        else if (address == 0xFF40)
+        {
+            std::cout << "writing to lcd" << std::endl;
+
+            this->lcdControl = value;
+            this->ic->requestInterrupt(InterruptType::LCD_STAT);
+        }
+        else
+        {
+            this->ioPorts[address - 0xFF00] = value;
+        }
+    }
 }
 
 Bus::Bus(InterruptController* ic) : ic(ic)
 {
-    // Initialize memory arrays
-    memset(videoRam, 0, 0x2000);
-    memset(workRam, 0, 0x2000);
-    memset(oam, 0, 0xA0);
-    memset(ioPorts, 0, 0x80);
-    memset(hRam, 0, 0x7F);
+    this->ram.setSize(1, INTERNAL_RAM_SIZE);
+    this->wram.setSize(2, WORK_RAM_SIZE);
+    this->vram.setSize(2, VIDEO_RAM_SIZE);
+    this->oam.setSize(1, OAM_SIZE);
+    this->hram.setSize(1, HRAM_SIZE);
 
     // Initialize other member variables
     joypadRegister = 0;
@@ -206,7 +295,7 @@ Bus::Bus(InterruptController* ic) : ic(ic)
 }
 
 // todo: this needs to become part of a rom class
-std::vector<uint8_t> createRam(const std::vector<uint8_t>& romData)
+std::vector<char> createRam(std::vector<char> romData)
 {
     uint8_t ramSizeByte = romData[0x149];
     size_t ramSize;
@@ -235,29 +324,34 @@ std::vector<uint8_t> createRam(const std::vector<uint8_t>& romData)
         throw std::runtime_error("Unknown RAM size");
     }
 
-    return std::vector<uint8_t>(ramSize, 0);
+    return std::vector<char>(ramSize, 0);
 }
 
 // todo: this needs to become part of a rom class
-std::unique_ptr<IMBC> createMBC(const std::vector<uint8_t>& romData)
+void Bus::createMBC()
 {
+    auto romData = this->cartridge.rom_data();
+
     uint8_t mbcType = romData[0x147];
-    std::vector<uint8_t> ramData = createRam(romData);
+    std::vector<char> ramData = createRam(romData);
 
     switch (mbcType)
     {
     case 0x00:
         // ROM ONLY
-        return std::make_unique<NoMBC>(romData);
+        this->mbc = std::make_unique<NoMBC>(romData);
+        break;
     case 0x01:
     case 0x02:
     case 0x03:
         // MBC1
-        return std::make_unique<MBC1>(romData, ramData);
+        this->mbc = std::make_unique<MBC1>(romData, ramData);
+        return;
     case 0x05:
     case 0x06:
         // MBC2
-        return std::make_unique<MBC2>(romData, ramData);
+        this->mbc = std::make_unique<MBC2>(romData, ramData);
+        return;
     case 0x0B:
     case 0x0C:
     case 0x0D:
@@ -270,7 +364,8 @@ std::unique_ptr<IMBC> createMBC(const std::vector<uint8_t>& romData)
     case 0x12:
     case 0x13:
         // MBC3
-        return std::make_unique<MBC3>(romData, ramData);
+        this->mbc = std::make_unique<MBC3>(romData, ramData);
+        return;
     case 0x19:
     case 0x1A:
     case 0x1B:
@@ -278,13 +373,16 @@ std::unique_ptr<IMBC> createMBC(const std::vector<uint8_t>& romData)
     case 0x1D:
     case 0x1E:
         // MBC5
-        return std::make_unique<MBC5>(romData, ramData);
+        this->mbc = std::make_unique<MBC5>(romData, ramData);
+        return;
     case 0x20:
         // MBC6
-        return std::make_unique<MBC6>(romData, ramData);
+        this->mbc = std::make_unique<MBC6>(romData, ramData);
+        return;
     case 0x22:
         // MBC7
-        return std::make_unique<MBC7>(romData, ramData);
+        this->mbc = std::make_unique<MBC7>(romData, ramData);
+        return;
     case 0xFC:
     // POCKET CAMERA
     //return std::make_unique<PocketCamera>(romData, ramData);
@@ -302,15 +400,19 @@ std::unique_ptr<IMBC> createMBC(const std::vector<uint8_t>& romData)
     }
 }
 
-
-void Bus::loadRom(const std::vector<uint8_t>& romData)
+void Bus::loadRom(std::string path)
 {
-    this->mbc = createMBC(romData);
-    this->loadPaletteData(romData);
+    this->cartridge.load(path);
+    INITIAL_ROM_ADDRESS = this->cartridge.header().entryPoint;
+
+    this->createMBC();
+    this->loadPaletteData();
 }
 
-void Bus::loadPaletteData(const std::vector<uint8_t>& romData)
+void Bus::loadPaletteData()
 {
+    auto romData = this->cartridge.rom_data();
+
     // Check if ROM data has the required size to hold palette information
     if (romData.size() < 0x6C)
     {

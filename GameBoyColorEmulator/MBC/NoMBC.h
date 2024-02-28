@@ -10,14 +10,14 @@
 
 class NoMBC : public IMBC {
 public:
-    NoMBC(const std::vector<uint8_t> &romData);
+    NoMBC(const std::vector<char> &romData);
 
     uint8_t read(uint16_t address) override;
 
     void write(uint16_t address, uint8_t data) override;
 
 private:
-    std::vector<uint8_t> rom;
+    std::vector<char> rom;
 };
 
 

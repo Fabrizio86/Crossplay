@@ -7,20 +7,21 @@
 
 #include <vector>
 #include "../../Interfaces/IMBC.h"
+#include "../../Definitions.h"
 
 class MBC1 : public IMBC {
 public:
-    MBC1(const std::vector<uint8_t>& romData, const std::vector<uint8_t> &ramData);
+    MBC1(const DataBuffer& romData, const DataBuffer &ramData);
 
-    uint8_t read(uint16_t address) override;
+    ui8 read(uint16_t address) override;
 
-    void write(uint16_t address, uint8_t data) override;
+    void write(uint16_t address, ui8 data) override;
 
 private:
-    std::vector<uint8_t> rom; // The entire ROM frameBuffer
-    std::vector<uint8_t> ram; // The RAM frameBuffer
-    uint8_t currentRomBank; // The currently selected ROM bank
-    uint8_t currentRamBank; // The currently selected RAM bank
+    DataBuffer rom; // The entire ROM frameBuffer
+    DataBuffer ram; // The RAM frameBuffer
+    ui8 currentRomBank; // The currently selected ROM bank
+    ui8 currentRamBank; // The currently selected RAM bank
     bool romBankingMode; // The current mode (true for ROM banking mode, false for RAM banking mode)
     bool ramEnabled; // Whether the RAM is currently enabled
 };

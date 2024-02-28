@@ -11,14 +11,16 @@
 #include "Consts.h"
 
 // Flag register
-struct Flags {
-    bool zero: 1;
-    bool subtract: 1;
-    bool halfCarry: 1;
-    bool carry: 1;
+struct Flags
+{
+    bool zero : 1;
+    bool subtract : 1;
+    bool halfCarry : 1;
+    bool carry : 1;
 };
 
-struct Registers {
+struct Registers
+{
     // General-purpose registers
     uint8_t regB;
     // General-purpose registers
@@ -37,11 +39,13 @@ struct Registers {
     uint8_t regF;
 
     // Special-purpose registers
-    uint16_t regPC;  // Program Counter
-    uint16_t regSP;  // Stack Pointer
+    uint16_t regPC; // Program Counter
+    uint16_t regSP; // Stack Pointer
 
-    void reset() {
+    void reset()
+    {
         memset(this, 0, sizeof(Registers));
+        regA = 0x1;
         regSP = INITIAL_SP_ADDRESS;
         regPC = INITIAL_ROM_ADDRESS;
     }

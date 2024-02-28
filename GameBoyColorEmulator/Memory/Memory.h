@@ -9,15 +9,16 @@
 
 class Memory {
 public:
-    Memory(size_t bankNumbers, size_t bankSize);
+    Memory() = default;
 
     void write(uint8_t address, uint8_t bankIndex, uint8_t value);
 
     uint8_t read(uint8_t address, uint8_t bankIndex);
 
+    void setSize(size_t bankNumbers, size_t bankSize);
+
 private:
     std::vector<Bank> banks;
 };
-
 
 #endif //CROSSPLAY_MEMORY_H

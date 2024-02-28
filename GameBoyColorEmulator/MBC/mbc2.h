@@ -5,20 +5,20 @@
 #ifndef CROSSPLAY_MBC2_H
 #define CROSSPLAY_MBC2_H
 
-#include <vector>
+#include "../../Definitions.h"
 #include "../../Interfaces/IMBC.h"
 
 class MBC2 : public IMBC {
 public:
-    MBC2(const std::vector<uint8_t> &romData, const std::vector<uint8_t> &ramData);
+    MBC2(const DataBuffer &romData, const DataBuffer &ramData);
 
     uint8_t read(uint16_t address) override;
 
     void write(uint16_t address, uint8_t data) override;
 
 private:
-    std::vector<uint8_t> rom;
-    std::vector<uint8_t> ram;
+    DataBuffer rom;
+    DataBuffer ram;
     bool ramEnabled;
     uint8_t romBank;
 

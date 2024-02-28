@@ -7,9 +7,9 @@
 #define CROSSPLAY_INTERRUPTVECTORTABLE_H
 
 #include <unordered_map>
-#include "../Definitions.h"
+#include "../../Definitions.h"
 #include "InterruptType.h"
-#include "Bus.h"
+#include "../Bus.h"
 
 class InterruptVectorTable {
 public:

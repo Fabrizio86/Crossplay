@@ -13,6 +13,7 @@ struct CartridgeHeader
     uint8_t type;
     uint8_t romSize;
     uint8_t ramSize;
+    uint16_t entryPoint;
 };
 
 

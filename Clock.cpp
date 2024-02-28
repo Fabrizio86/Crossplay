@@ -11,11 +11,9 @@
 #include <iostream>
 #include <thread>
 
-#include "GameBoyColorEmulator/GbPPU.h"
+#include "GameBoyColorEmulator/PPU//GbPPU.h"
 
 using namespace std;
-
-constexpr double MICROSECONDS_IN_SECOND = 1000000.0;
 
 void Clock::start()
 {
@@ -24,13 +22,10 @@ void Clock::start()
 
     this->running = true;
 
-    thread clkT([this]()
+    thread clkT([&]()
     {
         while (this->running)
         {
-            std::unique_lock<std::mutex> lock(m);
-            cv.wait(lock);
-
             try
             {
                 this->cpu->exec();
@@ -40,6 +35,8 @@ void Clock::start()
                 cout << e.what() << endl;
                 this->running = false;
             }
+
+            std::this_thread::sleep_for(std::chrono::nanoseconds(this->cpuFreq));
         }
     });
 
@@ -47,35 +44,27 @@ void Clock::start()
     {
         while (this->running)
         {
-            std::unique_lock<std::mutex> lock(m);
-            cv.wait(lock);
-
             this->ppu->exec();
+            std::this_thread::sleep_for(std::chrono::nanoseconds(this->ppuFreq));
         }
     });
 
-    clkT.detach();
-    plkT.detach();
-
     // Handle events
     sf::Event event;
-    while (window->pollEvent(event))
+    while (window->pollEvent(event) && this->running)
     {
         if (event.type == sf::Event::Closed)
             window->close();
     }
 
-    while (this->running)
-    {
-        std::this_thread::sleep_for(std::chrono::nanoseconds(238));
-        std::lock_guard<std::mutex> lock(m);
-        cv.notify_all();
-    }
+    clkT.join();
+    plkT.join();
 }
 
-Clock::Clock(double freqMHz, ICpu* cpu, IPPU* ppu) : cpu(cpu), ppu(ppu)
+Clock::Clock(double cpuFreqMHz, double ppuFreqMHz, ICpu* cpu, IPPU* ppu) : cpu(cpu), ppu(ppu)
 {
-    this->freq = static_cast<unsigned int>(1.0 / freqMHz * MICROSECONDS_IN_SECOND);
+    this->cpuFreq = 1.0 / cpuFreqMHz * 1e6;
+    this->ppuFreq = 1.0 / ppuFreqMHz * 1e6;
 }
 
 void Clock::stop()

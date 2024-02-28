@@ -3,7 +3,7 @@
 //
 
 #include "GbPPU.h"
-#include "Consts.h"
+#include "../Consts.h"
 #include "SFML/Graphics.hpp"
 
 GbPPU::GbPPU(IMemory* memory, InterruptController* controller) : memory(memory),
