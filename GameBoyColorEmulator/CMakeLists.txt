@@ -68,6 +68,9 @@ set(SOURCE_FILES
         Cartridges/CartridgeHeader.h
         Memory/Memory.cpp
         Memory/Bank.cpp
+        Timer.cpp
+        Timer.h
+        Timer.h
 )
 
 # Create the library

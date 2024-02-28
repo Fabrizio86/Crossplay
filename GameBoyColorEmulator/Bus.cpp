@@ -180,7 +180,16 @@ void Bus::ioWrite(uint32_t address, uint8_t value)
     switch (address)
     {
     case 0xFF00:
+        // write to input
         break;
+    case 0xFF01:
+        // Serial data transfer
+        break;
+    case 0xFF02:
+        // Serial data transfer controller
+        break;
+    default:
+        std::cout << "write to unmapped io at address: " << address << std::endl;;
     }
 
 
