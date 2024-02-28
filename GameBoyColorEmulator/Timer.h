@@ -11,13 +11,13 @@ class Timer
 public:
     void resetDivider();
 
-    uint8_t divider1() const;
+    uint8_t getDivider() const;
 
-    uint8_t timer_counter() const;
+    uint8_t getTimerCounter() const;
 
-    uint8_t timer_modulo() const;
+    uint8_t getTimerModulo() const;
 
-    uint8_t timer_control() const;
+    uint8_t getTimerControl() const;
 
 private:
     uint8_t divider;

@@ -4,22 +4,22 @@
 
 #include "Timer.h"
 
-uint8_t Timer::divider1() const
+uint8_t Timer::getDivider() const
 {
     return divider;
 }
 
-uint8_t Timer::timer_counter() const
+uint8_t Timer::getTimerCounter() const
 {
     return timerCounter;
 }
 
-uint8_t Timer::timer_modulo() const
+uint8_t Timer::getTimerModulo() const
 {
     return timerModulo;
 }
 
-uint8_t Timer::timer_control() const
+uint8_t Timer::getTimerControl() const
 {
     return timerControl;
 }
