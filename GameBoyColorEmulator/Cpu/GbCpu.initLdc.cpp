@@ -7,7 +7,7 @@
 void GbCpu::initLdc() {
 
     this->opCodes[Instruction::LD_C_n] = [this]() {
-        uint8_t value = this->memory->read(this->registers.regPC++);
+        uint8_t value = this->memory->read(this->registers.regPC);
         this->registers.regC = value;
     };
 

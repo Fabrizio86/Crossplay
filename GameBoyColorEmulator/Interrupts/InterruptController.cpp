@@ -12,7 +12,7 @@ InterruptController::InterruptController()
         {InterruptType::VBlank, false}, // Vertical blank interrupt (VBlank)
         {InterruptType::LCD_STAT, false}, // LCD STAT interrupt
         {InterruptType::TimerOverflow, false}, // Timer overflow interrupt
-        {InterruptType::SerialTransferComplete, false}, // Serial transfer complete interrupt
+        {InterruptType::Serial, false}, // Serial transfer complete interrupt
         {InterruptType::ButtonPress, false}, // Input (button press) interrupt
         {InterruptType::Unused, false}, // Unused (reserved) interrupt
         {InterruptType::DI, false}, // Used for Disable/Enable Interrupts

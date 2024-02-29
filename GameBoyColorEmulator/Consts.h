@@ -8,7 +8,7 @@
 #include "SFML/Graphics.hpp"
 #include <cstdint>
 
-static uint16_t INITIAL_ROM_ADDRESS = 0x00;
+static uint16_t INITIAL_ROM_ADDRESS = 0x0;
 static constexpr uint16_t INITIAL_SP_ADDRESS = 0xFFFE;
 
 static constexpr size_t ROM_BANK_SIZE = 16 * 1024;          // 16 KB

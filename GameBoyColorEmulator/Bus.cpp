@@ -18,41 +18,38 @@
 
 #include <iostream>
 
-uint8_t Bus::read(uint32_t address) const
+uint8_t Bus::read(uint32_t address)
 {
     if (address <= 0x00FF)
     {
-        return this->bootRom[address];
+        return this->bootRomEnabled ? this->bootRom[address] : this->mbc->read(address);
     }
     else if (address < 0x8000)
     {
         // ROM bank 00~NN
-        return mbc->read(address);
+        return this->mbc->read(address);
     }
     else if (address < 0xA000)
     {
-        // 8KB Video RAM
-        return videoRam[address - 0x8000];
+        const int bankIndex = (lcdControl >> 4) & 1;
+        return this->vram.read(address - CARTRIDGE_ROM_SIZE, bankIndex);
     }
     else if (address < 0xC000)
     {
-        // 8KB External RAM
-        return mbc->read(address);
+        return this->mbc->read(address);
     }
     else if (address < 0xE000)
     {
-        // 8KB Work RAM
-        return workRam[address - 0xC000];
+        const int bankIndex = (lcdControl >> 3) & 1;
+        return this->wram.read(address - 0xC000, bankIndex);
     }
     else if (address < 0xFE00)
     {
-        // 8KB Work RAM (shadow)
-        return workRam[address - 0xE000];
+        return this->read(address - 0x2000);
     }
     else if (address < 0xFEA0)
     {
-        // Sprite attribute table (OAM)
-        return oam[address - 0xFE00];
+        return this->oam.read(address - 0xFE00, 0);
     }
     else if (address < 0xFF00)
     {
@@ -71,6 +68,10 @@ uint8_t Bus::read(uint32_t address) const
         {
             return this->lcdControl;
         }
+        else if (address == 0xFF50)
+        {
+            return this->bootRomEnabled;
+        }
         else
         {
             return ioPorts[address - 0xFF00];
@@ -79,7 +80,7 @@ uint8_t Bus::read(uint32_t address) const
     else if (address < 0xFFFF)
     {
         // High RAM (HRAM)
-        return hRam[address - 0xFF80];
+        return this->hram.read(address - 0xFF80, 0);
     }
     else
     {
@@ -177,27 +178,65 @@ void Bus::writeWord(uint16_t address, uint16_t value)
 
 void Bus::ioWrite(uint32_t address, uint8_t value)
 {
-    switch (address)
+    // write to input
+    if (address == 0xFF00)
     {
-    case 0xFF00:
-        // write to input
-        break;
-    case 0xFF01:
-        // Serial data transfer
-        break;
-    case 0xFF02:
-        // Serial data transfer controller
-        break;
-    default:
-        std::cout << "write to unmapped io at address: " << address << std::endl;;
+        // Joypad register
+        this->joypadRegister = value;
     }
-
-
-    if (address == 0xFF46)
+    // Serial data transfer
+    else if (address == 0xFF01)
+    {
+    }
+    // Serial data transfer controller
+    else if (address == 0xFF02)
+    {
+    }
+    // reset divider
+    else if (address == 0xFF04)
+    {
+        this->timer.resetDivider();
+    }
+    // Serial data transfer controller
+    else if (address == 0xFF05)
+    {
+        this->timer.setTimerControl(value);
+    }
+    // set timer modulo
+    else if (address == 0xFF06)
+    {
+        this->timer.setTimerModulo(value);
+    }
+    // set timer control
+    else if (address == 0xFF07)
+    {
+        this->timer.setTimerControl(value);
+    }
+    else if (address < 0xFF0F)
+    {
+        // unmapped
+    }
+    else if (address == 0xFF0F)
+    {
+        memcpy(&this->iFlags, &value, 1);
+    }
+    else if (address == 0xff26)
+    {
+        // write to sound on/off
+    }
+    else if (address == 0xFF40)
+    {
+        std::cout << "writing to lcd" << std::endl;
+        this->lcdControl = value;
+    }
+    else if (address == 0xFF46)
     {
         DMA_VALUE = value;
     }
-
+    else if (address == 0xFF50)
+    {
+        this->bootRomEnabled = value & 0x1;
+    }
     else if (address == 0xFF68)
     {
         this->bgpIndex = (value & 0x3F);
@@ -212,62 +251,37 @@ void Bus::ioWrite(uint32_t address, uint8_t value)
     {
         if (address % 2 == 0)
         {
-            this->bgPaletteData[this->bgpIndex][0] = value; // Write to the high intensity byte of the selected background palette entry
+            this->bgPaletteData[this->bgpIndex][0] = value;
         }
         else
         {
-            this->bgPaletteData[this->bgpIndex][1] = value; // Write to the low intensity byte of the selected background palette entry
+            this->bgPaletteData[this->bgpIndex][1] = value;
         }
 
         if (this->autoIncrement)
         {
-            this->bgpIndex = (this->bgpIndex + 1) % 8; // Increment the background palette index cyclically
+            this->bgpIndex = (this->bgpIndex + 1) % 8;
         }
     }
     else if (address >= 0xFF6A && address <= 0xFF6F)
     {
         if (address % 2 == 0)
         {
-            this->objPaletteData[this->obpIndex][0] = value; // Write to the high intensity byte of the selected object palette entry
+            this->objPaletteData[this->obpIndex][0] = value;
         }
         else
         {
-            this->objPaletteData[this->obpIndex][1] = value; // Write to the low intensity byte of the selected object palette entry
+            this->objPaletteData[this->obpIndex][1] = value;
         }
 
         if (this->autoIncrement)
         {
-            this->obpIndex = (this->obpIndex + 1) % 8; // Increment the object palette index cyclically
+            this->obpIndex = (this->obpIndex + 1) % 8;
         }
     }
-    else if (address < 0xFF80)
+    else
     {
-        // I/O ports
-        if (address == 0xFF00)
-        {
-            // Joypad register
-            this->joypadRegister = value;
-        }
-        else if (address < 0xff3)
-        {
-        }
-        else if (address < 0xff08)
-        {
-        }
-        else if (address < 0xff27)
-        {
-        }
-        else if (address == 0xFF40)
-        {
-            std::cout << "writing to lcd" << std::endl;
-
-            this->lcdControl = value;
-            this->ic->requestInterrupt(InterruptType::LCD_STAT);
-        }
-        else
-        {
-            this->ioPorts[address - 0xFF00] = value;
-        }
+        std::cout << "write to unmapped io at address: " << address << std::endl;
     }
 }
 
@@ -278,6 +292,7 @@ Bus::Bus(InterruptController* ic) : ic(ic)
     this->vram.setSize(2, VIDEO_RAM_SIZE);
     this->oam.setSize(1, OAM_SIZE);
     this->hram.setSize(1, HRAM_SIZE);
+    this->bootRomEnabled = true;
 
     // Initialize other member variables
     joypadRegister = 0;
@@ -420,7 +435,7 @@ void Bus::loadRom(std::string path)
 
 void Bus::loadPaletteData()
 {
-    auto romData = this->cartridge.rom_data();
+    const auto romData = this->cartridge.rom_data();
 
     // Check if ROM data has the required size to hold palette information
     if (romData.size() < 0x6C)
@@ -437,5 +452,5 @@ void Bus::loadPaletteData()
 
 void Bus::performDMA(uint8_t address)
 {
-    memcpy(oam, &videoRam[address], 160);
+    this->oam.write(address, 0, 160);
 }

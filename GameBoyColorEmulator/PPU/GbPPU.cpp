@@ -8,7 +8,7 @@
 
 GbPPU::GbPPU(IMemory* memory, InterruptController* controller) : memory(memory),
                                                                  controller(controller),
-                                                                 screenBuffer(SCANLINE_WIDTH * SCANLINE_HEIGHT)
+                                                                 screenBuffer(SCANLINE_WIDTH * SCANLINE_HEIGHT, 0)
 {
 }
 
@@ -19,7 +19,7 @@ void GbPPU::displayToWindow()
 
     sf::Texture texture;
     texture.create(SCANLINE_WIDTH, SCANLINE_HEIGHT);
-    texture.update(reinterpret_cast<const sf::Uint8*>(this->screenBuffer.data()));
+    texture.update(this->screenBuffer.data());
 
     // Create a sprite to display the texture
     sf::Sprite sprite(texture);

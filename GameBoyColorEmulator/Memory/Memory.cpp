@@ -18,7 +18,7 @@ void Memory::setSize(const size_t bankNumbers, const size_t bankSize)
 {
     this->banks.resize(bankNumbers);
 
-    for (auto bank : this->banks)
+    for (auto& bank : this->banks)
     {
         bank.resize(bankSize);
     }

@@ -16,6 +16,7 @@
 
 #include <string>
 
+#include "Timer.h"
 #include "Cartridges/Cartridge.h"
 
 class Bus final : public IMemory
@@ -25,7 +26,7 @@ public:
 
     ~Bus() override = default;
 
-    uint8_t read(uint32_t address) const override;
+    uint8_t read(uint32_t address) override;
 
     void writeByte(uint32_t address, uint8_t value) override;
 
@@ -48,6 +49,7 @@ private:
     Memory vram;
     Memory oam;
     Memory hram;
+    Timer timer;
 
 
     std::array<uint8_t, 256> bootRom;
@@ -66,6 +68,7 @@ private:
     uint16_t objPaletteData[8][2];
 
     bool ramEnabled;
+    bool bootRomEnabled = true;
 
     void loadPaletteData();
     void createMBC();

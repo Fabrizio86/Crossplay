@@ -24,7 +24,7 @@ void GbCpu::exec() {
 
     opcode = static_cast<Instruction>(this->memory->read(this->registers.regPC++));
 
-   // std::cout << "SP: " << std::dec << this->registers.regSP << " PC: " << std::hex << registers.regPC << " OpcCode: " << std::hex << (int)opcode << std::endl;
+   std::cout << "SP: " << std::hex << this->registers.regSP << " PC: " << std::hex << registers.regPC << " OpcCode: " << std::hex << (int)opcode << std::endl;
 
     opCodes[opcode]();
 }

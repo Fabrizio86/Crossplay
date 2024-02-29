@@ -13,10 +13,10 @@
 // Flag register
 struct Flags
 {
-    bool zero : 1;
-    bool subtract : 1;
-    bool halfCarry : 1;
-    bool carry : 1;
+    bool zero = false;
+    bool subtract = false;
+    bool halfCarry = false;
+    bool carry = false;
 };
 
 struct Registers

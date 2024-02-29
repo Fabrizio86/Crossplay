@@ -12,7 +12,7 @@ class IMemory {
 public:
     virtual ~IMemory() = default;
 
-    virtual uint8_t read(uint32_t address) const = 0;
+    virtual uint8_t read(uint32_t address) = 0;
 
     virtual void writeByte(uint32_t address, uint8_t value) = 0;
 
