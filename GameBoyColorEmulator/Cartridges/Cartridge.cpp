@@ -10,15 +10,12 @@
 
 void Cartridge::load(std::string path)
 {
-    std::ifstream romFile(path, std::ios::binary);
-    if (!romFile.is_open())
-    {
-        throw std::exception();
-    }
+    std::ifstream file(path, std::ios::binary | std::ios::ate);
+    std::streamsize size = file.tellg();
+    file.seekg(0, std::ios::beg);
 
-    romData = std::vector((std::istreambuf_iterator(romFile)),
-                          std::istreambuf_iterator<char>());
-    romFile.close();
+    romData.resize(size, 0);
+    file.read(reinterpret_cast<char*>(romData.data()), size);
 
     memcpy(&this->headerInfo.title, &romData[0x134], 16);
     this->headerInfo.type = romData[0x147];

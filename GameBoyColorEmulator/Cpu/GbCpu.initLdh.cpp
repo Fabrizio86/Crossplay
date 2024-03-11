@@ -7,14 +7,16 @@
 void GbCpu::initLdh() {
 
     this->opCodes[Instruction::LD_HL_nn] = [this]() {
-        this->registers.regL = this->memory->read(this->registers.regPC++);
-        this->registers.regH = this->memory->read(this->registers.regPC++);
+        this->registers.regL = this->memory->read(this->registers.regPC);
+        this->registers.regPC++;
+        this->registers.regH = this->memory->read(this->registers.regPC);
+        this->registers.regPC++;
     };
 
     this->opCodes[Instruction::LD_HLI_A] = [this]() {
         uint16_t HL = (this->registers.regH << 8) | this->registers.regL; // Combine H and L to form HL
         this->memory->writeByte(HL, this->registers.regA); // Write regA to memory at address HL
-        HL = (HL + 1) & 0xFFFF; // Increment HL with wrapping at 0x10000
+        HL++;
         this->registers.regH = (HL >> 8) & 0xFF; // Store the high byte of HL back in regH
         this->registers.regL = HL & 0xFF; // Store the low byte of HL back in regL
     };
@@ -103,9 +105,9 @@ void GbCpu::initLdh() {
         this->registers.regH = (result >> 8) & 0xFF;
         this->registers.regL = result & 0xFF;
 
-        this->flags.zero = false;
-        this->flags.subtract = false;
-        this->flags.halfCarry = ((this->registers.regSP ^ value ^ (result & 0xFFFF)) & 0x10) == 0x10;
-        this->flags.carry = ((this->registers.regSP ^ value ^ (result & 0xFFFF)) & 0x100) == 0x100;
+        this->registers.regF.zero = false;
+        this->registers.regF.subtract = false;
+        this->registers.regF.halfCarry = ((this->registers.regSP ^ value ^ (result & 0xFFFF)) & 0x10) == 0x10;
+        this->registers.regF.carry = ((this->registers.regSP ^ value ^ (result & 0xFFFF)) & 0x100) == 0x100;
     };
 }

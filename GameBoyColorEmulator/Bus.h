@@ -28,11 +28,13 @@ public:
 
     uint8_t read(uint32_t address) override;
 
+    int8_t readSigned(uint32_t address) override;
+
     void writeByte(uint32_t address, uint8_t value) override;
 
-    uint16_t readWord(uint16_t address) override;
+    uint16_t readWord(uint32_t address) override;
 
-    void writeWord(uint16_t address, uint16_t value) override;
+    void writeWord(uint32_t address, uint16_t value) override;
 
     void loadRom(std::string path);
 
@@ -57,6 +59,12 @@ private:
 
     uint8_t ioPorts[IO_REGISTER_SIZE];
     uint8_t lcdControl;
+    uint8_t SCX;
+    uint8_t SCY;
+    uint8_t WX;
+    uint8_t WY;
+    uint8_t bgpRegister = 0xE4;
+
     uint8_t bgpIndex;
     uint8_t obpIndex;
     uint8_t autoIncrement;
@@ -68,7 +76,7 @@ private:
     uint16_t objPaletteData[8][2];
 
     bool ramEnabled;
-    bool bootRomEnabled = true;
+    bool bootRomEnabled;
 
     void loadPaletteData();
     void createMBC();

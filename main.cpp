@@ -11,7 +11,7 @@ int main()
     Hardware* hardware;
     InterruptController ic;
     Bus bus(&ic);
-    bus.loadRom("/Users/fabriziopaino/CLionProjects/gbemu/scripts/test_roms/02-interrupts.gb");
+    bus.loadRom("/Users/fabriziopaino/Crossplay/PR.gb");
 
     InterruptVectorTable ivt(&bus);
     ISR isr(&ic, &ivt);

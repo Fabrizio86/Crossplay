@@ -18,18 +18,18 @@ void GbCpu::initInc() {
 
         // Update flags
         // Set the Zero flag if the result is zero
-        this->flags.zero = (this->registers.regB == 0);
+        this->registers.regF.zero = (this->registers.regB == 0);
         // Reset the Subtract flag - it's not affected after an increment operation
-        this->flags.subtract = false;
+        this->registers.regF.subtract = false;
         // Set the Half Carry flag if there was a carry from bit 3
-        this->flags.halfCarry = ((this->registers.regB & 0x0F) == 0);
+        this->registers.regF.halfCarry = ((this->registers.regB & 0x0F) == 0);
     };
 
     this->opCodes[Instruction::INC_C] = [this]() {
         this->registers.regC++;
-        this->flags.zero = (this->registers.regC == 0);
-        this->flags.subtract = false;
-        this->flags.halfCarry = (this->registers.regC & 0x0F) == 0x00;
+        this->registers.regF.zero = (this->registers.regC == 0);
+        this->registers.regF.subtract = false;
+        this->registers.regF.halfCarry = (this->registers.regC & 0x0F) == 0x00;
         this->registers.regPC++;
     };
 
@@ -45,11 +45,11 @@ void GbCpu::initInc() {
 
         // Update flags
         // Set the Zero flag if the result is zero
-        this->flags.zero = (this->registers.regD == 0);
+        this->registers.regF.zero = (this->registers.regD == 0);
         // Reset the Subtract flag - not affected after an increment operation
-        this->flags.subtract = false;
+        this->registers.regF.subtract = false;
         // Set the Half Carry flag if there was a carry from bit 3
-        this->flags.halfCarry = ((this->registers.regD & 0x0F) == 0);
+        this->registers.regF.halfCarry = ((this->registers.regD & 0x0F) == 0);
     };
 
     this->opCodes[Instruction::INC_E] = [this]() {
@@ -57,11 +57,11 @@ void GbCpu::initInc() {
 
         // Update flags
         // Set Zero flag if the result is Zero
-        this->flags.zero = (this->registers.regE == 0);
+        this->registers.regF.zero = (this->registers.regE == 0);
         // Reset the Subtract flag - not affected by increment operation
-        this->flags.subtract = false;
+        this->registers.regF.subtract = false;
         // Set Half-Carry flag if there's a carry from bit 3
-        this->flags.halfCarry = ((this->registers.regE & 0x0F) == 0);
+        this->registers.regF.halfCarry = ((this->registers.regE & 0x0F) == 0);
     };
 
     this->opCodes[Instruction::INC_HL] = [this]() {
@@ -78,11 +78,11 @@ void GbCpu::initInc() {
 
         // Update flags
         // Set the Zero flag if the result is zero
-        this->flags.zero = (this->registers.regH == 0);
+        this->registers.regF.zero = (this->registers.regH == 0);
         // The Subtract flag is reset since it is not affected by an increment operation.
-        this->flags.subtract = false;
+        this->registers.regF.subtract = false;
         // Set the Half Carry flag if there was a carry from bit 3
-        this->flags.halfCarry = ((this->registers.regH & 0x0F) == 0);
+        this->registers.regF.halfCarry = ((this->registers.regH & 0x0F) == 0);
     };
 
     this->opCodes[Instruction::INC_L] = [this]() {
@@ -90,11 +90,11 @@ void GbCpu::initInc() {
 
         // Update flags
         // Set Zero flag if the result is Zero
-        this->flags.zero = (this->registers.regL == 0);
+        this->registers.regF.zero = (this->registers.regL == 0);
         // Reset the Subtract flag - not affected by increment operation
-        this->flags.subtract = false;
+        this->registers.regF.subtract = false;
         // Set Half-Carry flag if there's a carry from bit 3
-        this->flags.halfCarry = ((this->registers.regL & 0x0F) == 0);
+        this->registers.regF.halfCarry = ((this->registers.regL & 0x0F) == 0);
     };
 
     this->opCodes[Instruction::INC_SP] = [this]() {
@@ -109,11 +109,11 @@ void GbCpu::initInc() {
 
         // Update flags
         // Set Zero flag if the result is Zero
-        this->flags.zero = (value == 0);
+        this->registers.regF.zero = (value == 0);
         // Reset the Subtract flag - not affected by increment operation
-        this->flags.subtract = false;
+        this->registers.regF.subtract = false;
         // Set Half-Carry flag if there's a carry from bit 3
-        this->flags.halfCarry = ((value & 0x0F) == 0);
+        this->registers.regF.halfCarry = ((value & 0x0F) == 0);
     };
 
     this->opCodes[Instruction::INC_A] = [this]() {
@@ -121,10 +121,10 @@ void GbCpu::initInc() {
 
         // Update flags
         // The Zero flag is set if the result is zero
-        this->flags.zero = (this->registers.regA == 0);
+        this->registers.regF.zero = (this->registers.regA == 0);
         // The Subtract flag is reset to false as it's not affected by an increment operation
-        this->flags.subtract = false;
+        this->registers.regF.subtract = false;
         // The Half Carry flag is set if a carry from bit 3 occurred
-        this->flags.halfCarry = ((this->registers.regA & 0x0F) == 0);
+        this->registers.regF.halfCarry = ((this->registers.regA & 0x0F) == 0);
     };
 }

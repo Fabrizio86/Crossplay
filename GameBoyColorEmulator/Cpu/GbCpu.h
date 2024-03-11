@@ -35,11 +35,9 @@ private:
 
     IMemory* memory;
     Registers registers;
-    Flags flags;
-    bool interruptEnabled;
+    bool interruptEnabled = true;
 
     Registers savedRegisters;
-    Flags savedFlags;
     InterruptController* interruptController;
     ISR* isr;
 
@@ -54,13 +52,13 @@ private:
 
     void updateFlagsAfterLogicalOperation(uint8_t value, LogicalOperation operation);
 
-    void performBitwiseXorAndUpdateFlags(uint8_t& registerA, uint8_t value);
-
     void resetRegistersAndDisableInterrupts(uint16_t currentPc, uint16_t newPcValue);
 
     void pushToStack(uint8_t value);
 
     void performSubtraction(uint8_t operandB, bool includeCarry);
+
+    void performXor(uint8_t value);
 
     void initXor();
 
@@ -92,6 +90,8 @@ private:
 
     void initR();
 
+    bool MeetCondition(Condition condition) const;
+
     void initJ();
 
     void initC();
@@ -100,7 +100,11 @@ private:
 
     void initRcodes();
 
+    ui8 slaOp(ui8 value);
+
     void initScodes();
+
+    ui8 OpCodeRl(ui8 value);
 
     void initBcodes();
 

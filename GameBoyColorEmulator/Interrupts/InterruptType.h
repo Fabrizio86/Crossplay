@@ -6,15 +6,17 @@
 #ifndef CROSSPLAY_INTERRUPTTYPE_H
 #define CROSSPLAY_INTERRUPTTYPE_H
 
-enum class InterruptType {
+enum class InterruptType
+{
     VBlank = 0,
-    LCD_STAT = 1,
-    TimerOverflow = 2,
-    Serial = 3,
-    ButtonPress = 4,
-    Unused = 5,
-    DI = 6,
-    DMA = 7
+    HBlank,
+    LCD_STAT,
+    TimerOverflow,
+    Serial,
+    ButtonPress,
+    Unused,
+    DI,
+    DMA
 };
 
 #endif //CROSSPLAY_INTERRUPTTYPE_H

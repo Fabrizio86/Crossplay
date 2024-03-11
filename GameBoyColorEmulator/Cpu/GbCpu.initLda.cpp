@@ -30,36 +30,25 @@ void GbCpu::initLda()
 
     this->opCodes[Instruction::LD_HLD_A] = [this]()
     {
+//opcode_ldd(Address(hl), a);
+
+
         uint16_t address = (this->registers.regH << 8) | this->registers.regL;
         this->memory->writeWord(address, this->registers.regA);
-
-        if (this->registers.regL == 0x00)
-        {
-            if (this->registers.regH == 0x00)
-            {
-                this->registers.regH = 0xFF; // Wrap around to 0xFF if regH is 0x00
-            }
-            else
-            {
-                this->registers.regH--; // Decrement regH
-            }
-            this->registers.regL = 0xFF; // Set regL to 0xFF
-        }
-        else
-        {
-            this->registers.regL--; // Decrement regL
-        }
+        address--;
+        this->registers.regH = (address >> 8) & 0xFF;
+        this->registers.regL = address & 0xFF;
     };
 
     this->opCodes[Instruction::LD_A_HLD] = [this]()
     {
-        uint16_t address = (this->registers.regH << 8) | this->registers.regL; // Combine H and L to form the HL pair
-        this->registers.regA = this->memory->read(address); // Load the byte from the memory location pointed to by HL into A
+        uint16_t address = (this->registers.regH << 8) | this->registers.regL;
+        this->registers.regA = this->memory->read(address);
 
         // Decrement the HL register pair
         address--;
-        this->registers.regH = (address >> 8) & 0xFF; // Get the higher byte and store it in H
-        this->registers.regL = address & 0xFF; // Get the lower byte and store it in L
+        this->registers.regH = (address >> 8) & 0xFF;
+        this->registers.regL = address & 0xFF;
     };
 
     this->opCodes[Instruction::LD_A_n] = [this]()
@@ -125,19 +114,19 @@ void GbCpu::initLda()
     this->opCodes[Instruction::DAA] = [this]()
     {
         uint8_t correction = 0x00;
-        if (this->flags.halfCarry || (!this->flags.subtract && (this->registers.regA & 0x0F) > 9))
+        if (this->registers.regF.halfCarry || (!this->registers.regF.subtract && (this->registers.regA & 0x0F) > 9))
         {
             correction |= 0x06;
         }
 
-        if (this->flags.carry || (!this->flags.subtract && this->registers.regA > 0x99))
+        if (this->registers.regF.carry || (!this->registers.regF.subtract && this->registers.regA > 0x99))
         {
             correction |= 0x60;
         }
 
-        this->registers.regA += (this->flags.subtract ? -correction : correction);
-        this->flags.carry = this->registers.regA > 0xFF;
-        this->flags.zero = (this->registers.regA == 0);
-        this->flags.halfCarry = false;
+        this->registers.regA += (this->registers.regF.subtract ? -correction : correction);
+        this->registers.regF.carry = this->registers.regA > 0xFF;
+        this->registers.regF.zero = (this->registers.regA == 0);
+        this->registers.regF.halfCarry = false;
     };
 }

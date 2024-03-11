@@ -9,6 +9,7 @@
 #include <cstdint>
 
 #include "Consts.h"
+#include "../Definitions.h"
 
 // Flag register
 struct Flags
@@ -17,26 +18,68 @@ struct Flags
     bool subtract = false;
     bool halfCarry = false;
     bool carry = false;
+    bool unused1 = false;
+    bool unused2 = false;
+    bool unused3 = false;
+    bool unused4 = false;
+
+    void set(uint8_t byte)
+    {
+        zero     = byte & FLAG_Z;
+        subtract = byte & FLAG_N;
+        halfCarry= byte & FLAG_H;
+        carry    = byte & FLAG_C;
+        unused1  = byte & 0x08;
+        unused2  = byte & 0x04;
+        unused3  = byte & 0x02;
+        unused4  = byte & 0x01;
+    }
+
+    uint8_t toByte() const
+    {
+        uint8_t byte = 0;
+        byte |= (zero     ? FLAG_Z : 0);
+        byte |= (subtract ? FLAG_N : 0);
+        byte |= (halfCarry? FLAG_H : 0);
+        byte |= (carry    ? FLAG_C : 0);
+        byte |= (unused1  ? 0x08 : 0);
+        byte |= (unused2  ? 0x04 : 0);
+        byte |= (unused3  ? 0x02 : 0);
+        byte |= (unused4  ? 0x01 : 0);
+        return byte;
+    }
+
+    void reset()
+    {
+        zero = false;
+        subtract = false;
+        halfCarry = false;
+        carry = false;
+        unused1 = false;
+        unused2 = false;
+        unused3 = false;
+        unused4 = false;
+    }
+
+    void resetLowerFourBits()
+    {
+        unused1 = false;
+        unused2 = false;
+        unused3 = false;
+        unused4 = false;
+    }
 };
 
 struct Registers
 {
-    // General-purpose registers
     uint8_t regB;
-    // General-purpose registers
     uint8_t regC;
-    // General-purpose registers
     uint8_t regD;
-    // General-purpose registers
     uint8_t regE;
-    // General-purpose registers
     uint8_t regH;
-    // General-purpose registers
     uint8_t regL;
-    // General-purpose registers
     uint8_t regA;
-    // General-purpose registers
-    uint8_t regF;
+    Flags regF;
 
     // Special-purpose registers
     uint16_t regPC; // Program Counter
@@ -44,8 +87,14 @@ struct Registers
 
     void reset()
     {
-        memset(this, 0, sizeof(Registers));
-        regA = 0x1;
+        regA =
+            regB =
+            regC =
+            regD =
+            regE =
+            regH =
+            regL = 0;
+        this->regF.reset();
         regSP = INITIAL_SP_ADDRESS;
         regPC = INITIAL_ROM_ADDRESS;
     }

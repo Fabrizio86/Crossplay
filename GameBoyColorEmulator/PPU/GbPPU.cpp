@@ -8,7 +8,9 @@
 
 GbPPU::GbPPU(IMemory* memory, InterruptController* controller) : memory(memory),
                                                                  controller(controller),
-                                                                 screenBuffer(SCANLINE_WIDTH * SCANLINE_HEIGHT, 0)
+                                                                 screenBuffer(SCANLINE_WIDTH, std::vector<uint32_t>(SCANLINE_HEIGHT, 0)),
+                                                                 tiles(&screenBuffer, memory, &lcdControl),
+                                                                 x(0), y(0)
 {
 }
 
@@ -17,26 +19,60 @@ void GbPPU::displayToWindow()
     // Clear the window
     window->clear();
 
-    sf::Texture texture;
-    texture.create(SCANLINE_WIDTH, SCANLINE_HEIGHT);
-    texture.update(this->screenBuffer.data());
+    sf::VertexArray pixels(sf::Points, SCANLINE_WIDTH * SCANLINE_HEIGHT);
 
-    // Create a sprite to display the texture
-    sf::Sprite sprite(texture);
-    sprite.scale(3, 3);
-    window->draw(sprite);
+    for (std::size_t y = 0; y < SCANLINE_HEIGHT; ++y)
+        for (std::size_t x = 0; x < SCANLINE_WIDTH; ++x)
+        {
+            std::size_t idx = y * SCANLINE_WIDTH + x;
+            pixels[idx].position = sf::Vector2f(x, y);
+            pixels[idx].color.a = screenBuffer[x][y] >> 24;
+            pixels[idx].color.r = screenBuffer[x][y] >> 16;
+            pixels[idx].color.g = screenBuffer[x][y] >> 8;
+            pixels[idx].color.b = screenBuffer[x][y];
+        }
 
+    window->draw(pixels);
     window->display();
 }
 
 void GbPPU::exec()
 {
+    if (x < 20 && y < 18)
+        this->tiles.tiles[y][x].renderPixel();
+
+    this->x++;
+
+    if (x == 20)
+    {
+        this->controller->requestInterrupt(InterruptType::HBlank);
+    }
+    else if (x == 32)
+    {
+        this->controller->clearInterrupt(InterruptType::HBlank);
+        x = 0;
+        y++;
+    }
+
+    if (y == 18)
+    {
+        this->controller->requestInterrupt(InterruptType::VBlank);
+
+        this->displayToWindow();
+    }
+    else if (y == 32)
+    {
+        y = 0;
+        this->controller->clearInterrupt(InterruptType::VBlank);
+    }
+
+    return;
     // Increment the cycle count based on the system clock
     this->cycles++;
 
     // Check which GbPPU phase we are in based on the cycle count
     // and execute the corresponding phase
-    if (this->cycles < H_BLANK_CYCLES)
+    if (this->cycles > 160)
     {
         this->hBlank();
     }
@@ -242,7 +278,7 @@ void GbPPU::renderPixel(uint8_t tileData, int tilePixelX, int tilePixelY, int sc
     int index = screenY * SCANLINE_WIDTH + screenX;
 
     // Update the screen buffer with the pixel color
-    screenBuffer[index] = colorValue;
+    // screenBuffer[index] = colorValue;
 }
 
 uint8_t GbPPU::getColorFromPalette(int index)
@@ -319,10 +355,10 @@ void GbPPU::renderSprites()
                     bool priority = attributes & 0x80;
 
                     // Render the pixel if it's non-zero and has priority, or if it's zero and the background is transparent
-                    if ((colorIndex != 0 && priority) || (colorIndex != 0 && screenBuffer[index] == 0))
-                    {
-                        screenBuffer[index] = getColorFromPalette(colorIndex);
-                    }
+                    //if ((colorIndex != 0 && priority) || (colorIndex != 0 && screenBuffer[index] == 0))
+                    //{
+                    //screenBuffer[index] = getColorFromPalette(colorIndex);
+                    //}
                 }
             }
         }

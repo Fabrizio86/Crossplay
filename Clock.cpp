@@ -17,7 +17,7 @@ using namespace std;
 
 void Clock::start()
 {
-    sf::RenderWindow* const window = new sf::RenderWindow(sf::VideoMode(SCANLINE_WIDTH * 3, SCANLINE_HEIGHT * 3), "Game Boy Color Emulator");
+    sf::RenderWindow* const window = new sf::RenderWindow(sf::VideoMode(SCANLINE_WIDTH * 2, SCANLINE_HEIGHT * 2, 32), "Game Boy Color Emulator");
     ((GbPPU*)this->ppu)->window = window;
 
     this->running = true;
@@ -45,7 +45,8 @@ void Clock::start()
         while (this->running)
         {
             this->ppu->exec();
-            std::this_thread::sleep_for(std::chrono::nanoseconds(this->ppuFreq));
+            //std::this_thread::sleep_for(std::chrono::microseconds(this->ppuFreq));
+
         }
     });
 
@@ -64,7 +65,7 @@ void Clock::start()
 Clock::Clock(double cpuFreqMHz, double ppuFreqMHz, ICpu* cpu, IPPU* ppu) : cpu(cpu), ppu(ppu)
 {
     this->cpuFreq = 1.0 / cpuFreqMHz * 1e6;
-    this->ppuFreq = 1.0 / ppuFreqMHz * 1e6;
+    this->ppuFreq = std::round(1000 * 1000 / 59.7);
 }
 
 void Clock::stop()

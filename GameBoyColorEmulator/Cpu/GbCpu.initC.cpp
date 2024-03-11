@@ -9,8 +9,8 @@ void GbCpu::initC() {
     this->opCodes[Instruction::CPL] = [this]() {
         this->registers.regA = ~this->registers.regA;
 
-        this->flags.subtract = true;
-        this->flags.halfCarry = true;
+        this->registers.regF.subtract = true;
+        this->registers.regF.halfCarry = true;
     };
 
     this->opCodes[Instruction::CP_B] = [this]() {
@@ -58,7 +58,7 @@ void GbCpu::initC() {
         uint16_t address = this->memory->readWord(this->registers.regPC);
         this->registers.regPC += 2;
 
-        if (this->flags.zero) return;
+        if (this->registers.regF.zero) return;
 
         this->memory->writeWord(this->registers.regSP - 2, this->registers.regPC);
         this->registers.regSP -= 2;
@@ -69,7 +69,7 @@ void GbCpu::initC() {
         uint16_t address = this->memory->readWord(this->registers.regPC);
         this->registers.regPC += 2;
 
-        if (!this->flags.zero) return;
+        if (!this->registers.regF.zero) return;
 
         this->memory->writeWord(this->registers.regSP - 2, this->registers.regPC);
         this->registers.regSP -= 2;
@@ -89,7 +89,7 @@ void GbCpu::initC() {
         uint16_t address = this->memory->readWord(this->registers.regPC);
         this->registers.regPC += 2;
 
-        if (this->flags.carry) return;
+        if (this->registers.regF.carry) return;
 
         this->memory->writeWord(this->registers.regSP - 2, this->registers.regPC);
         this->registers.regSP -= 2;
@@ -100,7 +100,7 @@ void GbCpu::initC() {
         uint16_t address = this->memory->readWord(this->registers.regPC);
         this->registers.regPC += 2;
 
-        if (!this->flags.carry) return;
+        if (!this->registers.regF.carry) return;
 
         this->memory->writeWord(this->registers.regSP - 2, this->registers.regPC);
         this->registers.regSP -= 2;
@@ -115,10 +115,10 @@ void GbCpu::initC() {
 
         uint16_t temp = this->registers.regA - value;
 
-        this->flags.zero = (temp & 0xFF) == 0;
-        this->flags.subtract = true;
-        this->flags.halfCarry = ((this->registers.regA & 0x0F) - (value & 0x0F)) < 0;
-        this->flags.carry = temp > 0xFF;
+        this->registers.regF.zero = (temp & 0xFF) == 0;
+        this->registers.regF.subtract = true;
+        this->registers.regF.halfCarry = ((this->registers.regA & 0x0F) - (value & 0x0F)) < 0;
+        this->registers.regF.carry = temp > 0xFF;
     };
 
 

@@ -68,6 +68,26 @@ uint8_t Bus::read(uint32_t address)
         {
             return this->lcdControl;
         }
+        else if (address == 0xFF42)
+        {
+            return this->SCY;
+        }
+        else if (address == 0xFF43)
+        {
+            return this->SCX;
+        }
+        else if (address == 0xFF47)
+        {
+            return this->bgpRegister;
+        }
+        else if (address == 0xFF4A)
+        {
+            return this->WY;
+        }
+        else if (address == 0xFF4B)
+        {
+            return this->WX;
+        }
         else if (address == 0xFF50)
         {
             return this->bootRomEnabled;
@@ -89,6 +109,12 @@ uint8_t Bus::read(uint32_t address)
         memcpy(&val, &iFlags, sizeof(uint8_t));
         return val;
     }
+}
+
+int8_t Bus::readSigned(uint32_t address)
+{
+    const uint8_t val = this->read(address);
+    return static_cast<int8_t>(val);
 }
 
 /**
@@ -158,19 +184,25 @@ void Bus::writeByte(uint32_t address, uint8_t value)
     // write to interrupt flags
     else if (address == 0xFFFF)
     {
-        std::cout << "Interrupt flag: " << (int)value << std::endl;
+        std::cout << "Interrupt flag: " << std::endl <<
+            " - Joypad: " << (iFlags.Joypad ? "True" : "False") << std::endl <<
+            " - Serial: " << (iFlags.Serial ? "True" : "False") << std::endl <<
+            " - Timer: " << (iFlags.Timer ? "True" : "False") << std::endl <<
+            " - VBlank: " << (iFlags.VBlank ? "True" : "False") << std::endl <<
+            " - LCD:" << (iFlags.LCD ? "True" : "False") << std::endl
+            << "------------------------------" << std::endl;
 
         memcpy(&iFlags, &value, sizeof(InterruptFlags));
     }
 }
 
-uint16_t Bus::readWord(uint16_t address)
+uint16_t Bus::readWord(uint32_t address)
 {
     uint16_t word = (read(address) << 8) | read(address + 1);
     return word;
 }
 
-void Bus::writeWord(uint16_t address, uint16_t value)
+void Bus::writeWord(uint32_t address, uint16_t value)
 {
     writeByte(address, value >> 8);
     writeByte(address + 1, value & 0xFF);
@@ -229,9 +261,29 @@ void Bus::ioWrite(uint32_t address, uint8_t value)
         std::cout << "writing to lcd" << std::endl;
         this->lcdControl = value;
     }
+    else if (address == 0xFF42)
+    {
+        this->SCY = value;
+    }
+    else if (address == 0xFF43)
+    {
+        this->SCX = value;
+    }
     else if (address == 0xFF46)
     {
         DMA_VALUE = value;
+    }
+    else if (address == 0xFF47)
+    {
+        bgpRegister = value;
+    }
+    else if (address == 0xFF4A)
+    {
+        this->WY = value;
+    }
+    else if (address == 0xFF4B)
+    {
+        this->WX = value;
     }
     else if (address == 0xFF50)
     {
@@ -427,7 +479,6 @@ void Bus::createMBC()
 void Bus::loadRom(std::string path)
 {
     this->cartridge.load(path);
-    INITIAL_ROM_ADDRESS = this->cartridge.header().entryPoint;
 
     this->createMBC();
     this->loadPaletteData();

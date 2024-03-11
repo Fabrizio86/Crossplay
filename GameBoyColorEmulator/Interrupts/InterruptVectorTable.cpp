@@ -16,6 +16,7 @@ ISRFunctionPtr InterruptVectorTable::getInterruptHandler(InterruptType interrupt
 // todo: need to implement these
 InterruptVectorTable::InterruptVectorTable(Bus *bus) : bus(bus) {
     this->interruptHandlers[InterruptType::VBlank] = []() { cout << "vblank" << endl; };
+    this->interruptHandlers[InterruptType::HBlank] = []() { cout << "hblank" << endl; };
     this->interruptHandlers[InterruptType::LCD_STAT] = []() {cout << "LCD_STAT" << endl; };
     this->interruptHandlers[InterruptType::TimerOverflow] = []() {cout << "TimerOverflow" << endl; };
     this->interruptHandlers[InterruptType::Serial] = []() {cout << "SerialTransferComplete" << endl; };

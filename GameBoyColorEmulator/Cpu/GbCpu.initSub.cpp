@@ -8,7 +8,7 @@ void GbCpu::performSubtraction(uint8_t operandB, bool includeCarry) {
     uint8_t operandA = this->registers.regA;
     uint8_t temp = operandA - operandB;
     if (includeCarry) {
-        temp -= this->flags.carry;
+        temp -= this->registers.regF.carry;
     }
 
     this->updateFlagsAfterSubtraction(temp, operandA, operandB);
@@ -17,9 +17,9 @@ void GbCpu::performSubtraction(uint8_t operandB, bool includeCarry) {
 
 void GbCpu::initSub() {
     this->opCodes[Instruction::CCF] = [this]() {
-        this->flags.subtract = false;
-        this->flags.halfCarry = false;
-        this->flags.carry = !this->flags.carry;
+        this->registers.regF.subtract = false;
+        this->registers.regF.halfCarry = false;
+        this->registers.regF.carry = !this->registers.regF.carry;
     };
 
     this->opCodes[Instruction::HALT] = [this]() {
@@ -41,8 +41,8 @@ void GbCpu::initSub() {
 
     this->opCodes[Instruction::SUB_A] = [this]() {
         this->registers.regA = 0;
-        this->flags.zero = true;
-        this->flags.subtract = true;
+        this->registers.regF.zero = true;
+        this->registers.regF.subtract = true;
     };
 
     this->opCodes[Instruction::SUB_n] = [this]() {
@@ -73,9 +73,9 @@ void GbCpu::initSub() {
     };
 
     this->opCodes[Instruction::SCF] = [this]() {
-        this->flags.subtract = false;
-        this->flags.halfCarry = false;
-        this->flags.carry = true;
+        this->registers.regF.subtract = false;
+        this->registers.regF.halfCarry = false;
+        this->registers.regF.carry = true;
     };
 
 }

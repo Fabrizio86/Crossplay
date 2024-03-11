@@ -4,111 +4,73 @@
 
 #include "../GbCpu.h"
 
-void GbCpu::initScodes() {
-    this->prefixCbOpcodes[PrefixCB::SLA_B] = [this]() {
-        uint8_t value = this->registers.regB;
-        const bool carry = value >> 7;
-        value <<= 1;
+ui8 GbCpu::slaOp(ui8 value)
+{
+    this->registers.regF.carry = CheckBit(value, 7);
+    const ui8 result = static_cast<ui8>(value << 1);
 
-        this->flags.zero = (value == 0);
-        this->flags.subtract = false;
-        this->flags.halfCarry = false;
-        this->flags.carry = carry;
+    this->registers.regF.zero == result == 0;
+    this->registers.regF.halfCarry = false;
+    this->registers.regF.subtract = false;
 
-        this->registers.regB = value;
+    return result;
+}
+
+void GbCpu::initScodes()
+{
+    this->prefixCbOpcodes[PrefixCB::SLA_B] = [this]()
+    {
+        this->registers.regB = this->slaOp(this->registers.regB);
     };
 
-    this->prefixCbOpcodes[PrefixCB::SLA_C] = [this]() {
-        uint8_t value = this->registers.regC;
-
-        const bool carry = value >> 7;
-        value <<= 1;
-
-        this->flags.zero = (value == 0);
-        this->flags.subtract = false;
-        this->flags.halfCarry = false;
-        this->flags.carry = carry;
-
-        this->registers.regC = value;
+    this->prefixCbOpcodes[PrefixCB::SLA_C] = [this]()
+    {
+        this->registers.regC = this->slaOp(this->registers.regC);
     };
 
-    this->prefixCbOpcodes[PrefixCB::SLA_D] = [this]() {
-        uint8_t value = this->registers.regD;
-
-        const bool carry = value >> 7;
-        value <<= 1;
-
-        this->flags.zero = (value == 0);
-        this->flags.subtract = false;
-        this->flags.halfCarry = false;
-        this->flags.carry = carry;
-
-        this->registers.regD = value;
+    this->prefixCbOpcodes[PrefixCB::SLA_D] = [this]()
+    {
+        this->registers.regD = this->slaOp(this->registers.regD);
     };
 
-    this->prefixCbOpcodes[PrefixCB::SLA_E] = [this]() {
-        uint8_t value = this->registers.regE;
-
-        const bool carry = value >> 7;
-        value <<= 1;
-
-        this->flags.zero = (value == 0);
-        this->flags.subtract = false;
-        this->flags.halfCarry = false;
-        this->flags.carry = carry;
-
-        this->registers.regE = value;
+    this->prefixCbOpcodes[PrefixCB::SLA_E] = [this]()
+    {
+        this->registers.regE = this->slaOp(this->registers.regE);
     };
 
-    this->prefixCbOpcodes[PrefixCB::SLA_H] = [this]() {
-        uint8_t value = this->registers.regH;
-
-        const bool carry = value >> 7;
-        value <<= 1;
-
-        this->flags.zero = (value == 0);
-        this->flags.subtract = false;
-        this->flags.halfCarry = false;
-        this->flags.carry = carry;
-
-        this->registers.regH = value;
+    this->prefixCbOpcodes[PrefixCB::SLA_H] = [this]()
+    {
+        this->registers.regH = this->slaOp(this->registers.regH);
     };
 
-    this->prefixCbOpcodes[PrefixCB::SLA_L] = [this]() {
-        uint8_t value = this->registers.regL;
-        const bool carry = value >> 7;
-        value <<= 1;
-
-        this->flags.zero = (value == 0);
-        this->flags.subtract = false;
-        this->flags.halfCarry = false;
-        this->flags.carry = carry;
-
-        this->registers.regL = value;
+    this->prefixCbOpcodes[PrefixCB::SLA_L] = [this]()
+    {
+        this->registers.regL = this->slaOp(this->registers.regL);
     };
 
-    this->prefixCbOpcodes[PrefixCB::SLA_indHL] = [this]() {
+    this->prefixCbOpcodes[PrefixCB::SLA_indHL] = [this]()
+    {
         const uint16_t address = (this->registers.regH << 8) | this->registers.regL;
         uint8_t value = this->memory->read(address);
         const bool carry = value >> 7;
         value <<= 1;
 
-        this->flags.zero = (value == 0);
-        this->flags.subtract = false;
-        this->flags.halfCarry = false;
-        this->flags.carry = carry;
+        this->registers.regF.zero = (value == 0);
+        this->registers.regF.subtract = false;
+        this->registers.regF.halfCarry = false;
+        this->registers.regF.carry = carry;
 
         this->memory->writeByte(address, value);
     };
 
-    this->prefixCbOpcodes[PrefixCB::SET_3_L] = [this]() {
+    this->prefixCbOpcodes[PrefixCB::SET_3_L] = [this]()
+    {
         uint8_t value = this->registers.regL;
         value |= (1 << 3);
 
-        this->flags.zero = (value == 0);
-        this->flags.subtract = false;
-        this->flags.halfCarry = false;
+        this->registers.regF.zero = (value == 0);
+        this->registers.regF.subtract = false;
+        this->registers.regF.halfCarry = false;
         this->registers.regL = value;
     };
-
 }

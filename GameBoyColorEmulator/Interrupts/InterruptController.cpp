@@ -10,6 +10,7 @@ InterruptController::InterruptController()
 {
     interruptRequests = {
         {InterruptType::VBlank, false}, // Vertical blank interrupt (VBlank)
+        {InterruptType::HBlank, false}, // Vertical blank interrupt (VBlank)
         {InterruptType::LCD_STAT, false}, // LCD STAT interrupt
         {InterruptType::TimerOverflow, false}, // Timer overflow interrupt
         {InterruptType::Serial, false}, // Serial transfer complete interrupt

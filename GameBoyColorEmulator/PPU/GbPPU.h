@@ -11,8 +11,10 @@
 #include "../../Interfaces/IMemory.h"
 #include "../Interrupts/InterruptController.h"
 #include "../../Interfaces/IPPU.h"
+#include "../../Definitions.h"
 
 #include "LcdControl.h"
+#include "Tile.hpp"
 
 class GbPPU : public IPPU
 {
@@ -26,6 +28,10 @@ public:
 private:
     IMemory* memory;
     LcdControl lcdControl;
+    ScreenBuffer screenBuffer;
+    ScreenTiles tiles;
+    int x = 0;
+    int y = 0;
 
     // todo: this section below needs to be redesigned, too messy
 
@@ -41,8 +47,6 @@ private:
     uint8_t interruptFlags; // Interrupt flags (e.g., end of frame, V-Blank)
 
     InterruptController* controller;
-
-    std::vector<uint8_t> screenBuffer;
 
     // Define methods for different GbPPU phases
     void hBlank();
