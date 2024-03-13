@@ -55,7 +55,7 @@ uint8_t Bus::read(ui16 address)
     {
         return 0xFF;
     }
-    else if(InRange(address, IO_ADDR, 0xFF7F))
+    else if (InRange(address, IO_ADDR, 0xFF7F))
     {
         // I/O ports
         if (address == 0xFF00)
@@ -105,7 +105,7 @@ uint8_t Bus::read(ui16 address)
         // High RAM (HRAM)
         return this->hram.read(address - 0xFF80, 0);
     }
-    else if(address == 0xFFFF)
+    else if (address == 0xFFFF)
     {
         uint8_t val;
         memcpy(&val, &iFlags, sizeof(uint8_t));
@@ -113,8 +113,12 @@ uint8_t Bus::read(ui16 address)
     }
     else
     {
-       std::cout << "What are you trying to read? No address " << address << " here!" << std::endl;
+        std::cout << "What are you trying to read? No address " << address << " here!" << std::endl;
     }
+}
+
+ui8 Bus::ioRead(ui16 address)
+{
 }
 
 int8_t Bus::readSigned(ui16 address)
@@ -374,6 +378,11 @@ Bus::Bus(InterruptController* ic) : ic(ic)
         0x21, 0x04, 0x01, 0x11, 0xA8, 0x00, 0x1A, 0x13, 0xBE, 0x00, 0x00, 0x23, 0x7D, 0xFE, 0x34, 0x20,
         0xF5, 0x06, 0x19, 0x78, 0x86, 0x23, 0x05, 0x20, 0xFB, 0x86, 0x00, 0x00, 0x3E, 0x01, 0xE0, 0x50
     };
+
+    for(int i = 0xFF00; i <  HI_RAM_ADDR; ++i)
+    {
+        this->ioMap[i] = 0;
+    }
 }
 
 // todo: this needs to become part of a rom class

@@ -74,11 +74,6 @@ private:
     uint16_t bgPaletteData[8][2];
     uint16_t objPaletteData[8][2];
 
-    bool ramEnabled;
-    bool bootRomEnabled;
-
-    void loadPaletteData();
-    void createMBC();
 
     // I/O state
     uint8_t joypadRegister = 0xFF; // Joypad register, stored at address 0xFF00
@@ -93,6 +88,16 @@ private:
 
 private:
     void ioWrite(uint32_t address, uint8_t value);
+
+    ui8 ioRead(ui16 address);
+
+    bool ramEnabled;
+
+    bool bootRomEnabled;
+
+    void loadPaletteData();
+
+    void createMBC();
 };
 
 
