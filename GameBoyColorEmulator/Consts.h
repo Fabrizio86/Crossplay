@@ -19,6 +19,7 @@ static constexpr size_t VIDEO_RAM_SIZE = 8 * 1024;
 static constexpr size_t WORK_RAM_SIZE = 16 * 1024;
 static constexpr size_t CARTRIDGE_ROM_SIZE = 0x8000;
 static constexpr size_t VRAM_ADDRESS = 0x8000;
+static constexpr size_t CARTRIDGE_ADDRESS = 0xA000;
 static constexpr size_t CARTRIDGE_RAM_SIZE = 0x2000;
 static constexpr size_t HRAM_SIZE = 0x7F;
 static constexpr size_t SOUND_REGISTERS_SIZE = 0x100;
@@ -29,6 +30,10 @@ static constexpr size_t ECHO_RAM_BASE = 0xE000;
 static constexpr size_t WORK_RAM_BASE = 0xC000;
 static constexpr size_t OAM_SIZE = 0xA0;
 static constexpr size_t OAM_ADDR = 0xFE00;
+static constexpr size_t FORBIDDEN_ADDR = 0xFEA0;
+static constexpr size_t IO_ADDR = 0xFF00;
+static constexpr size_t HRAM_ADDR = 0xFF00;
+
 static constexpr int MAX_SPRITES = 40;
 static constexpr int MBC_TYPE = 0x147;
 

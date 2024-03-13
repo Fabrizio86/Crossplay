@@ -45,7 +45,7 @@ void Clock::start()
         while (this->running)
         {
             this->ppu->exec();
-            //std::this_thread::sleep_for(std::chrono::microseconds(this->ppuFreq));
+            std::this_thread::sleep_for(std::chrono::nanoseconds(this->ppuFreq));
 
         }
     });
@@ -65,7 +65,7 @@ void Clock::start()
 Clock::Clock(double cpuFreqMHz, double ppuFreqMHz, ICpu* cpu, IPPU* ppu) : cpu(cpu), ppu(ppu)
 {
     this->cpuFreq = 1.0 / cpuFreqMHz * 1e6;
-    this->ppuFreq = std::round(1000 * 1000 / 59.7);
+    this->ppuFreq = 1.0 / ppuFreqMHz * 1e6;
 }
 
 void Clock::stop()

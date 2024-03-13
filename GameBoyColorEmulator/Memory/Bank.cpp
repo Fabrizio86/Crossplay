@@ -14,5 +14,5 @@ uint8_t Bank::read(const uint16_t address) const
 }
 
 void Bank::resize(const size_t size) {
-    this->data.resize(size);
+    this->data.resize(size, 0);
 }

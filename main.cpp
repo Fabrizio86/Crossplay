@@ -1,10 +1,7 @@
-#include <iostream>
 #include "Hardware.h"
 #include "GameBoyColorEmulator/Cpu/GbCpu.h"
 #include "GameBoyColorEmulator/Bus.h"
 #include "GameBoyColorEmulator/PPU/GbPPU.h"
-#include <fstream>
-#include <vector>
 
 int main()
 {
@@ -20,14 +17,7 @@ int main()
     Clock clock(4.20, 8.40, &cpu, &ppu);
 
     cpu.reset();
-
     clock.start();
-
-    int i;
-    std::cin >> i;
-
     clock.stop();
-
-    std::cout << "Hello, World!" << std::endl;
     return 0;
 }

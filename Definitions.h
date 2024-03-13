@@ -19,6 +19,7 @@ using uchar = unsigned char;
 using ISRFunctionPtr = std::function<void()>;
 
 using ui8 = uint8_t;
+using ui16 = uint16_t;
 using DataBuffer = std::vector<char>;
 using ScreenBuffer = std::vector<std::vector<uint32_t>>;
 
@@ -38,5 +39,15 @@ enum class Condition {
 };
 
 bool CheckBit(const ui8 value, const ui8 bit);
+
+static bool InRange(ui8 val, ui16 low, ui16 high)
+{
+    return val >= low && val <= high;
+}
+
+static bool InRange(ui16 val, ui16 low, ui16 high)
+{
+    return val >= low && val <= high;
+}
 
 #endif //CROSSPLAY_DEFINITIONS_H

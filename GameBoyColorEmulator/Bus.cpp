@@ -18,32 +18,31 @@
 
 #include <iostream>
 
-uint8_t Bus::read(uint32_t address)
+uint8_t Bus::read(ui16 address)
 {
-    if (address <= 0x00FF)
+    if (InRange(address, 0x0, 0x7FFF))
     {
-        return this->bootRomEnabled ? this->bootRom[address] : this->mbc->read(address);
+        return InRange(address, 0x0, 0xff) && this->bootRomEnabled ? this->bootRom[address] : this->mbc->read(address);
     }
-    else if (address < 0x8000)
+    else if (InRange(address, VRAM_ADDRESS, 0x9FFF))
     {
-        // ROM bank 00~NN
         return this->mbc->read(address);
     }
-    else if (address < 0xA000)
+    else if (InRange(address, CARTRIDGE_ADDRESS, 0xBFFF))
     {
         const int bankIndex = (lcdControl >> 4) & 1;
         return this->vram.read(address - CARTRIDGE_ROM_SIZE, bankIndex);
     }
-    else if (address < 0xC000)
+    else if (InRange(address, WORK_RAM_BASE, 0xDFFF))
     {
         return this->mbc->read(address);
     }
-    else if (address < 0xE000)
+    else if (InRange(address, WORK_RAM_BASE, 0xDFFF))
     {
         const int bankIndex = (lcdControl >> 3) & 1;
         return this->wram.read(address - 0xC000, bankIndex);
     }
-    else if (address < 0xFE00)
+    else if (InRange(address, ECHO_RAM_BASE, 0xFDFF))
     {
         return this->read(address - 0x2000);
     }
@@ -92,6 +91,10 @@ uint8_t Bus::read(uint32_t address)
         {
             return this->bootRomEnabled;
         }
+        else if (address >= 0xFF69 && address <= 0xFF6F)
+        {
+            return 0xff;
+        }
         else
         {
             return ioPorts[address - 0xFF00];
@@ -111,10 +114,9 @@ uint8_t Bus::read(uint32_t address)
     }
 }
 
-int8_t Bus::readSigned(uint32_t address)
+int8_t Bus::readSigned(ui16 address)
 {
-    const uint8_t val = this->read(address);
-    return static_cast<int8_t>(val);
+    return static_cast<int8_t>(this->read(address));
 }
 
 /**
@@ -123,60 +125,56 @@ int8_t Bus::readSigned(uint32_t address)
  * @param address The address to write the byte to.
  * @param value The value to write.
  */
-void Bus::writeByte(uint32_t address, uint8_t value)
+void Bus::writeByte(ui16 address, uint8_t value)
 {
-    // write from rom
-    if (address < CARTRIDGE_ROM_SIZE)
+    if (InRange(address, 0x0000, 0x7fff))
     {
         this->mbc->write(address, value);
     }
 
-    // write to video ram
-    else if (address < 0xA000)
+    else if (InRange(address, VRAM_ADDRESS, 0x9FFF))
     {
         const int bankIndex = (lcdControl >> 4) & 1;
         this->vram.write(address - CARTRIDGE_ROM_SIZE, bankIndex, value);
     }
 
     // write to External RAM
-    else if (address < WORK_RAM_BASE)
+    else if (InRange(address, CARTRIDGE_ADDRESS, 0xBFFF))
     {
-        mbc->write(address, value);
+        this->mbc->write(address, value);
     }
 
-    // write to work ram
-    else if (address < ECHO_RAM_BASE)
+    else if (InRange(address, WORK_RAM_BASE, 0xDFFF))
     {
         const int bankIndex = (lcdControl >> 3) & 1;
         this->wram.write(address - WORK_RAM_BASE, bankIndex, value);
     }
 
-    // write to mirror
-    else if (address < 0xFE00)
+    else if (InRange(address, ECHO_RAM_BASE, 0xFDFF))
     {
         this->writeByte(address - 0x2000, value);
     }
 
     // write to oam
-    else if (address < 0xFEA0)
+    else if (InRange(address, OAM_ADDR, 0xFE9F))
     {
         this->oam.write(address - OAM_ADDR, 0, value);
     }
 
     // write to blocked address
-    else if (address < 0xFF00)
+    else if (InRange(address, FORBIDDEN_ADDR, 0xFEFF))
     {
         std::cout << "Write attempt to unusable memory " << address << std::endl;
     }
 
     // write to io ports
-    else if (address < 0xFF80)
+    else if (InRange(address, IO_ADDR, 0xFF7F))
     {
         this->ioWrite(address, value);
     }
 
     // write to high ram
-    else if (address < 0xFFFF)
+    else if (InRange(address, HRAM_ADDR, 0xFFFE))
     {
         this->hram.write(address - 0xFF80, 0, value);
     }
@@ -194,15 +192,19 @@ void Bus::writeByte(uint32_t address, uint8_t value)
 
         memcpy(&iFlags, &value, sizeof(InterruptFlags));
     }
+    else
+    {
+        std::cout << "Where are you going!? no address here! " << std::hex << address << std::endl;
+    }
 }
 
-uint16_t Bus::readWord(uint32_t address)
+uint16_t Bus::readWord(ui16 address)
 {
     uint16_t word = (read(address) << 8) | read(address + 1);
     return word;
 }
 
-void Bus::writeWord(uint32_t address, uint16_t value)
+void Bus::writeWord(ui16 address, uint16_t value)
 {
     writeByte(address, value >> 8);
     writeByte(address + 1, value & 0xFF);
@@ -301,6 +303,7 @@ void Bus::ioWrite(uint32_t address, uint8_t value)
     }
     else if (address >= 0xFF69 && address <= 0xFF6F)
     {
+        return;
         if (address % 2 == 0)
         {
             this->bgPaletteData[this->bgpIndex][0] = value;

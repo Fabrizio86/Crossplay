@@ -26,15 +26,15 @@ public:
 
     ~Bus() override = default;
 
-    uint8_t read(uint32_t address) override;
+    uint8_t read(ui16 address) override;
 
-    int8_t readSigned(uint32_t address) override;
+    int8_t readSigned(ui16 address) override;
 
-    void writeByte(uint32_t address, uint8_t value) override;
+    void writeByte(ui16 address, uint8_t value) override;
 
-    uint16_t readWord(uint32_t address) override;
+    uint16_t readWord(ui16 address) override;
 
-    void writeWord(uint32_t address, uint16_t value) override;
+    void writeWord(ui16 address, uint16_t value) override;
 
     void loadRom(std::string path);
 
@@ -52,7 +52,6 @@ private:
     Memory oam;
     Memory hram;
     Timer timer;
-
 
     std::array<uint8_t, 256> bootRom;
     InterruptFlags iFlags;
