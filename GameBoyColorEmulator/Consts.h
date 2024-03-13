@@ -33,6 +33,7 @@ static constexpr size_t OAM_ADDR = 0xFE00;
 static constexpr size_t FORBIDDEN_ADDR = 0xFEA0;
 static constexpr size_t IO_ADDR = 0xFF00;
 static constexpr size_t HRAM_ADDR = 0xFF00;
+static constexpr size_t HI_RAM_ADDR = 0xFF80;
 
 static constexpr int MAX_SPRITES = 40;
 static constexpr int MBC_TYPE = 0x147;

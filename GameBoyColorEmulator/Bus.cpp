@@ -22,40 +22,40 @@ uint8_t Bus::read(ui16 address)
 {
     if (InRange(address, 0x0, 0x7FFF))
     {
-        return InRange(address, 0x0, 0xff) && this->bootRomEnabled ? this->bootRom[address] : this->mbc->read(address);
-    }
-    else if (InRange(address, VRAM_ADDRESS, 0x9FFF))
-    {
+        if (InRange(address, 0x0, 0xFF) && this->bootRomEnabled)
+        {
+            return this->bootRom[address];
+        }
+
         return this->mbc->read(address);
     }
-    else if (InRange(address, CARTRIDGE_ADDRESS, 0xBFFF))
+    else if (InRange(address, VRAM_ADDRESS, 0x9FFF))
     {
         const int bankIndex = (lcdControl >> 4) & 1;
         return this->vram.read(address - CARTRIDGE_ROM_SIZE, bankIndex);
     }
-    else if (InRange(address, WORK_RAM_BASE, 0xDFFF))
+    else if (InRange(address, CARTRIDGE_ADDRESS, 0xBFFF))
     {
         return this->mbc->read(address);
     }
     else if (InRange(address, WORK_RAM_BASE, 0xDFFF))
     {
         const int bankIndex = (lcdControl >> 3) & 1;
-        return this->wram.read(address - 0xC000, bankIndex);
+        return this->wram.read(address - WORK_RAM_BASE, bankIndex);
     }
     else if (InRange(address, ECHO_RAM_BASE, 0xFDFF))
     {
         return this->read(address - 0x2000);
     }
-    else if (address < 0xFEA0)
+    else if (InRange(address, OAM_ADDR, 0xFE9F))
     {
-        return this->oam.read(address - 0xFE00, 0);
+        return this->oam.read(address - OAM_ADDR, 0);
     }
-    else if (address < 0xFF00)
+    else if (InRange(address, FORBIDDEN_ADDR, 0xFEFF))
     {
-        // Not usable
-        return 0xff;
+        return 0xFF;
     }
-    else if (address < 0xFF80)
+    else if(InRange(address, IO_ADDR, 0xFF7F))
     {
         // I/O ports
         if (address == 0xFF00)
@@ -100,17 +100,20 @@ uint8_t Bus::read(ui16 address)
             return ioPorts[address - 0xFF00];
         }
     }
-    else if (address < 0xFFFF)
+    else if (InRange(address, HI_RAM_ADDR, 0xFFFE))
     {
         // High RAM (HRAM)
         return this->hram.read(address - 0xFF80, 0);
     }
-    else
+    else if(address == 0xFFFF)
     {
-        // Interrupt Enable register
         uint8_t val;
         memcpy(&val, &iFlags, sizeof(uint8_t));
         return val;
+    }
+    else
+    {
+       std::cout << "What are you trying to read? No address " << address << " here!" << std::endl;
     }
 }
 
