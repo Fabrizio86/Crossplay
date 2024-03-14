@@ -55,7 +55,7 @@ typedef struct
         return (Unused3 << 7) | (Unused2 << 6) | (Unused1 << 5) | (Joypad << 4) | (Serial << 3) | (Timer << 2) | (LCD << 1) | VBlank;
     }
 
-    void fromByte(ui8 byte)
+    void fromByte(const ui8 byte)
     {
         Unused3 = (byte >> 7) & 1U;
         Unused2 = (byte >> 6) & 1U;
