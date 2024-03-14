@@ -9,7 +9,7 @@
 GbPPU::GbPPU(IMemory* memory, InterruptController* controller) : memory(memory),
                                                                  controller(controller),
                                                                  screenBuffer(SCANLINE_WIDTH, std::vector<uint32_t>(SCANLINE_HEIGHT, 0)),
-                                                                 tiles(&screenBuffer, memory, &lcdControl),
+                                                                 tiles(&screenBuffer, memory),
                                                                  x(0), y(0)
 {
 }

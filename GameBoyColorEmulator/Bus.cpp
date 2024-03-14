@@ -63,7 +63,7 @@ ui8 Bus::ioRead(ui16 address)
     if (InRange(address, 0xFF08, 0xFF0E))return INV_ADDR;
     if (address == 0xFF0F) return this->iFlags.toByte();
     if (InRange(address, 0xFF10, 0xFF3F)) return INV_ADDR;
-    if (address == 0xFF40) return this->lcdControl;
+    if (address == 0xFF40) return this->lcdControl.toByte();
     if (address == 0xFF41) return this->lcdStatus;
     if (address == 0xFF42) return this->SCY;
     if (address == 0xFF43) return this->SCX;
@@ -99,7 +99,7 @@ void Bus::writeByte(ui16 address, uint8_t value)
 
     else if (InRange(address, VRAM_ADDRESS, 0x9FFF))
     {
-        const int bankIndex = (lcdControl >> 4) & 1;
+        const int bankIndex = (lcdControl.toByte() >> 4) & 1;
         this->vram.write(address - CARTRIDGE_ROM_SIZE, bankIndex, value);
     }
 
@@ -191,9 +191,9 @@ void Bus::ioWrite(ui16 address, uint8_t value)
     else if (address == 0xFF06) this->timer.setTimerModulo(value);
     else if (address == 0xFF07) this->timer.setTimerControl(value);
     else if (InRange(address, 0xFF08, 0xFF0E))return;
-    else if (address == 0xFF0F) memcpy(&this->iFlags, &value, 1);
+    else if (address == 0xFF0F) this->iFlags.fromByte(value);
     else if (InRange(address, 0xFF10, 0xFF3F)) return;
-    else if (address == 0xFF40) this->lcdControl = value;
+    else if (address == 0xFF40) this->lcdControl.fromByte(value);
     else if (address == 0xFF41) this->lcdStatus = value;
     else if (address == 0xFF42) this->SCY = value;
     else if (address == 0xFF43) this->SCX = value;
