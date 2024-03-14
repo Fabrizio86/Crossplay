@@ -50,9 +50,21 @@ typedef struct
     unsigned Unused2 : 1;
     unsigned Unused3 : 1;
 
-    uint8_t toByte() const
+    ui8 toByte() const
     {
         return (Unused3 << 7) | (Unused2 << 6) | (Unused1 << 5) | (Joypad << 4) | (Serial << 3) | (Timer << 2) | (LCD << 1) | VBlank;
+    }
+
+    void fromByte(ui8 byte)
+    {
+        Unused3 = (byte >> 7) & 1U;
+        Unused2 = (byte >> 6) & 1U;
+        Unused1 = (byte >> 5) & 1U;
+        Joypad = (byte >> 4) & 1U;
+        Serial = (byte >> 3) & 1U;
+        Timer = (byte >> 2) & 1U;
+        LCD = (byte >> 1) & 1U;
+        VBlank = byte & 1U;
     }
 } InterruptFlags;
 

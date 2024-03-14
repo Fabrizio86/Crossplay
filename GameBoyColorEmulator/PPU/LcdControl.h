@@ -27,6 +27,18 @@ struct LcdControl
             | (ObjEnabled << 1)
             | BgWindowEnabled;
     }
+
+    void fromByte(ui8 byte)
+    {
+        LcdPpuEbabled = (byte >> 7) & 1U;
+        WindowTileMapArea = (byte >> 6) & 1U;
+        WindowEnabled = (byte >> 5) & 1U;
+        BgWindowTileDataArea = (byte >> 4) & 1U;
+        BgTileMapArea = (byte >> 3) & 1U;
+        ObjSize = (byte >> 2) & 1U;
+        ObjEnabled = (byte >> 1) & 1U;
+        BgWindowEnabled = byte & 1U;
+    }
 };
 
 #endif //LCDCONTROL_H

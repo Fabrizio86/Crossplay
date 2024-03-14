@@ -27,7 +27,6 @@ public:
 
 private:
     IMemory* memory;
-    LcdControl lcdControl;
     ScreenBuffer screenBuffer;
     ScreenTiles tiles;
     int x = 0;

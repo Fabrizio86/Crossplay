@@ -18,7 +18,7 @@ struct Tile
     ScreenBuffer* buffer;
     IMemory* bus;
     uint8_t tileData[8][8];
-    LcdControl* lcdControl;
+    LcdControl lcdControl;
     uint8_t byte1;
     uint8_t byte2;
 
@@ -31,6 +31,8 @@ struct Tile
         uint8_t SCY = bus->read(0xFF42);
         uint8_t WX = bus->read(0xFF4B) - 7;
         uint8_t WY = bus->read(0xFF4A);
+        ui8 lcc = bus->read(0xFF40);
+        memcpy(&this->lcdControl, &lcc, 1);
 
         for (int i = 0; i < 8; ++i)
         {
@@ -49,7 +51,7 @@ struct Tile
                 uint8_t tileLine = bus->read(VRAM_ADDRESS + bgTileIndex * 16 + ((adjustedSCY & 7) * 2));
                 uint8_t bgPixel = ((tileLine >> (7 - (adjustedSCX & 7))) & 1) + (((tileLine >> 8) >> (7 - (adjustedSCX & 7))) & 1) * 2;
 
-                if (lcdControl->WindowEnabled)
+                if (lcdControl.WindowEnabled)
                 {
                     uint8_t adjustedWX = (px - WX + 7) % 256;
                     uint8_t adjustedWY = (py - WY) % 256;
@@ -98,7 +100,7 @@ struct Tile
 
 struct ScreenTiles
 {
-    ScreenTiles(ScreenBuffer* buffer, IMemory* memory, LcdControl* lcdControl): tiles{}
+    ScreenTiles(ScreenBuffer* buffer, IMemory* memory): tiles{}
     {
         for (int y = 0; y < 18; ++y)
         {
@@ -106,7 +108,6 @@ struct ScreenTiles
             {
                 this->tiles[y][x].buffer = buffer;
                 this->tiles[y][x].bus = memory;
-                this->tiles[y][x].lcdControl = lcdControl;
                 this->tiles[y][x].x = x;
                 this->tiles[y][x].y = y;
             }
