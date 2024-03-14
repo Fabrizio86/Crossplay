@@ -19,6 +19,7 @@
 #include "Serial.h"
 #include "Timer.h"
 #include "Cartridges/Cartridge.h"
+#include "PPU/LcdControl.h"
 
 class Bus final : public IMemory
 {
@@ -60,7 +61,7 @@ private:
     InterruptFlags iFlags;
 
     ui8 ioPorts[IO_REGISTER_SIZE];
-    ui8 lcdControl;
+    LcdControl lcdControl;
     ui8 lcdStatus;
     ui8 line;
     ui8 lyCompare;

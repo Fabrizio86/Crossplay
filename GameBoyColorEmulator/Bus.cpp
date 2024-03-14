@@ -27,7 +27,7 @@ uint8_t Bus::read(ui16 address)
     }
     else if (InRange(address, VRAM_ADDRESS, 0x9FFF))
     {
-        const int bankIndex = (lcdControl >> 4) & 1;
+        const int bankIndex = (lcdControl.toByte() >> 4) & 1;
         return this->vram.read(address - CARTRIDGE_ROM_SIZE, bankIndex);
     }
     else if (InRange(address, CARTRIDGE_ADDRESS, 0xBFFF)) return this->mbc->read(address);

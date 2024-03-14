@@ -15,6 +15,18 @@ struct LcdControl
     unsigned WindowEnabled : 1;
     unsigned WindowTileMapArea : 1;
     unsigned LcdPpuEbabled : 1;
+
+    uint8_t toByte() const
+    {
+        return (LcdPpuEbabled << 7) |
+            (WindowTileMapArea << 6) |
+            (WindowEnabled << 5) |
+            (BgWindowTileDataArea << 4) |
+            (BgTileMapArea << 3) |
+            (ObjSize << 2)
+            | (ObjEnabled << 1)
+            | BgWindowEnabled;
+    }
 };
 
 #endif //LCDCONTROL_H
