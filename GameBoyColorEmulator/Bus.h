@@ -16,6 +16,7 @@
 
 #include <string>
 
+#include "Serial.h"
 #include "Timer.h"
 #include "Cartridges/Cartridge.h"
 
@@ -38,9 +39,10 @@ public:
 
     void loadRom(std::string path);
 
-    void performDMA(uint8_t address);
-
 private:
+    bool ramEnabled;
+    bool bootRomEnabled;
+
     std::unique_ptr<IMBC> mbc; // The memory bank controller
     InterruptController* ic;
     Cartridge cartridge;
@@ -52,52 +54,42 @@ private:
     Memory oam;
     Memory hram;
     Timer timer;
+    Serial serial;
 
-    std::array<uint8_t, 256> bootRom;
+    std::array<ui8, 256> bootRom;
     InterruptFlags iFlags;
 
-    uint8_t ioPorts[IO_REGISTER_SIZE];
-    uint8_t lcdControl;
-    uint8_t SCX;
-    uint8_t SCY;
-    uint8_t WX;
-    uint8_t WY;
-    uint8_t bgpRegister = 0xE4;
+    ui8 ioPorts[IO_REGISTER_SIZE];
+    ui8 lcdControl;
+    ui8 lcdStatus;
+    ui8 line;
+    ui8 lyCompare;
+    ui8 SCX;
+    ui8 SCY;
+    ui8 WX;
+    ui8 WY;
+    ui8 backgroundPalette;
+    ui8 spritePalette[2];
+    ui8 wramBank;
 
-    uint8_t bgpIndex;
-    uint8_t obpIndex;
-    uint8_t autoIncrement;
-
-    uint16_t serialTransfer;
+    ui16 serialTransfer;
     uint32_t timerAndDivider;
 
-    uint16_t bgPaletteData[8][2];
-    uint16_t objPaletteData[8][2];
+    ui16 bgPaletteData[8][2];
+    ui16 objPaletteData[8][2];
 
-
-    // I/O state
-    uint8_t joypadRegister = 0xFF; // Joypad register, stored at address 0xFF00
-    bool buttonDown = false; // Current state of the "down" button
-    bool buttonUp = false; // Current state of the "up" button
-    bool buttonLeft = false; // Current state of the "left" button
-    bool buttonRight = false; // Current state of the "right" button
-    bool buttonStart = false; // Current state of the "start" button
-    bool buttonSelect = false; // Current state of the "select" button
-    bool buttonB = false; // Current state of the "B" button
-    bool buttonA = false; // Current state of the "A" button
+    uint8_t joypadRegister = 0xFF;
 
 private:
-    void ioWrite(uint32_t address, uint8_t value);
+    void ioWrite(ui16 address, uint8_t value);
 
     ui8 ioRead(ui16 address);
-
-    bool ramEnabled;
-
-    bool bootRomEnabled;
 
     void loadPaletteData();
 
     void createMBC();
+
+    void dmaTransfer(const ui8 byte);
 };
 
 

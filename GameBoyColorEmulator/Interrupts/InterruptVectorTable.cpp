@@ -23,10 +23,7 @@ InterruptVectorTable::InterruptVectorTable(Bus *bus) : bus(bus) {
     this->interruptHandlers[InterruptType::ButtonPress] = []() {cout << "ButtonPress" << endl; };
     this->interruptHandlers[InterruptType::Unused] = []() {cout << "Unused" << endl; };
 
-    this->interruptHandlers[InterruptType::DMA] = [bus]() {
-        std::cout << "DMA value: " << (int)DMA_VALUE << std::endl;
-        bus->performDMA(DMA_VALUE);
-    };
+    this->interruptHandlers[InterruptType::DMA] = [bus]() {    };
 }
 
 void InterruptVectorTable::setHandler(InterruptType interruptType, ISRFunctionPtr handler) {

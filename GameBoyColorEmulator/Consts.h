@@ -16,7 +16,7 @@ static constexpr size_t RAM_BANK_SIZE = 8 * 1024;
 static constexpr size_t INTERNAL_RAM_SIZE = 8 * 1024;
 static constexpr size_t IO_REGISTER_SIZE = 0x80;
 static constexpr size_t VIDEO_RAM_SIZE = 8 * 1024;
-static constexpr size_t WORK_RAM_SIZE = 16 * 1024;
+static constexpr size_t WORK_RAM_SIZE = 4 * 1024;
 static constexpr size_t CARTRIDGE_ROM_SIZE = 0x8000;
 static constexpr size_t VRAM_ADDRESS = 0x8000;
 static constexpr size_t CARTRIDGE_ADDRESS = 0xA000;
@@ -34,6 +34,7 @@ static constexpr size_t FORBIDDEN_ADDR = 0xFEA0;
 static constexpr size_t IO_ADDR = 0xFF00;
 static constexpr size_t HRAM_ADDR = 0xFF00;
 static constexpr size_t HI_RAM_ADDR = 0xFF80;
+static constexpr size_t INV_ADDR = 0xFF;
 
 static constexpr int MAX_SPRITES = 40;
 static constexpr int MBC_TYPE = 0x147;
@@ -48,6 +49,11 @@ typedef struct
     unsigned Unused1 : 1;
     unsigned Unused2 : 1;
     unsigned Unused3 : 1;
+
+    uint8_t toByte() const
+    {
+        return (Unused3 << 7) | (Unused2 << 6) | (Unused1 << 5) | (Joypad << 4) | (Serial << 3) | (Timer << 2) | (LCD << 1) | VBlank;
+    }
 } InterruptFlags;
 
 // Timing constants (values are approximate and may need adjustment)
@@ -77,8 +83,6 @@ static constexpr uint16_t WINDOW_TILE_MAP_ADDRESS = 0x9800; // Example address f
 
 // Define the number of colors in the palette
 static const int PALETTE_SIZE = 4;
-
-static uint8_t DMA_VALUE = 0;
 
 // Define the palette colors (example colors for the Game Boy Color)
 static const uint32_t palette[PALETTE_SIZE] = {

@@ -22,11 +22,7 @@ uint8_t Bus::read(ui16 address)
 {
     if (InRange(address, 0x0, 0x7FFF))
     {
-        if (InRange(address, 0x0, 0xFF) && this->bootRomEnabled)
-        {
-            return this->bootRom[address];
-        }
-
+        if (InRange(address, 0x0, 0xFF) && this->bootRomEnabled)return this->bootRom[address];
         return this->mbc->read(address);
     }
     else if (InRange(address, VRAM_ADDRESS, 0x9FFF))
@@ -34,91 +30,59 @@ uint8_t Bus::read(ui16 address)
         const int bankIndex = (lcdControl >> 4) & 1;
         return this->vram.read(address - CARTRIDGE_ROM_SIZE, bankIndex);
     }
-    else if (InRange(address, CARTRIDGE_ADDRESS, 0xBFFF))
+    else if (InRange(address, CARTRIDGE_ADDRESS, 0xBFFF)) return this->mbc->read(address);
+    else if (InRange(address, WORK_RAM_BASE, 0xCFFF)) return this->wram.read(address - WORK_RAM_BASE, 0);
+    else if (InRange(address, 0xD000, 0xDFFF))
     {
-        return this->mbc->read(address);
+        this->wramBank = this->wramBank == 0 ? 1 : this->wramBank;
+        return this->wram.read(address - WORK_RAM_BASE, this->wramBank);
     }
-    else if (InRange(address, WORK_RAM_BASE, 0xDFFF))
-    {
-        const int bankIndex = (lcdControl >> 3) & 1;
-        return this->wram.read(address - WORK_RAM_BASE, bankIndex);
-    }
-    else if (InRange(address, ECHO_RAM_BASE, 0xFDFF))
-    {
-        return this->read(address - 0x2000);
-    }
-    else if (InRange(address, OAM_ADDR, 0xFE9F))
-    {
-        return this->oam.read(address - OAM_ADDR, 0);
-    }
-    else if (InRange(address, FORBIDDEN_ADDR, 0xFEFF))
-    {
-        return 0xFF;
-    }
-    else if (InRange(address, IO_ADDR, 0xFF7F))
-    {
-        // I/O ports
-        if (address == 0xFF00)
-        {
-            // Joypad register
-            return joypadRegister;
-        }
-        else if (address == 0xFF40)
-        {
-            return this->lcdControl;
-        }
-        else if (address == 0xFF42)
-        {
-            return this->SCY;
-        }
-        else if (address == 0xFF43)
-        {
-            return this->SCX;
-        }
-        else if (address == 0xFF47)
-        {
-            return this->bgpRegister;
-        }
-        else if (address == 0xFF4A)
-        {
-            return this->WY;
-        }
-        else if (address == 0xFF4B)
-        {
-            return this->WX;
-        }
-        else if (address == 0xFF50)
-        {
-            return this->bootRomEnabled;
-        }
-        else if (address >= 0xFF69 && address <= 0xFF6F)
-        {
-            return 0xff;
-        }
-        else
-        {
-            return ioPorts[address - 0xFF00];
-        }
-    }
-    else if (InRange(address, HI_RAM_ADDR, 0xFFFE))
-    {
-        // High RAM (HRAM)
-        return this->hram.read(address - 0xFF80, 0);
-    }
+    else if (InRange(address, ECHO_RAM_BASE, 0xFDFF)) return this->read(address - 0x2000);
+    else if (InRange(address, OAM_ADDR, 0xFE9F)) return this->oam.read(address - OAM_ADDR, 0);
+    else if (InRange(address, FORBIDDEN_ADDR, 0xFEFF))return INV_ADDR;
+    else if (InRange(address, IO_ADDR, 0xFF7F)) return this->ioRead(address);
+    else if (InRange(address, HI_RAM_ADDR, 0xFFFE)) return this->hram.read(address - 0xFF80, 0);
     else if (address == 0xFFFF)
     {
         uint8_t val;
         memcpy(&val, &iFlags, sizeof(uint8_t));
         return val;
     }
-    else
-    {
-        std::cout << "What are you trying to read? No address " << address << " here!" << std::endl;
-    }
+    else std::cout << "What are you trying to read? No address " << address << " here!" << std::endl;
 }
 
 ui8 Bus::ioRead(ui16 address)
 {
+    if (address == 0xFF00) return this->joypadRegister;
+    if (address == 0xFF01) return this->serial.read();
+    if (address == 0xFF02 || address == 0xFF03) return INV_ADDR;
+    if (address == 0xFF04) return this->timer.getDivider();
+    if (address == 0xFF05) return this->timer.getTimerCounter();
+    if (address == 0xFF06) return this->timer.getTimerModulo();
+    if (address == 0xFF07) return this->timer.getTimerControl();
+    if (InRange(address, 0xFF08, 0xFF0E))return INV_ADDR;
+    if (address == 0xFF0F) return this->iFlags.toByte();
+    if (InRange(address, 0xFF10, 0xFF3F)) return INV_ADDR;
+    if (address == 0xFF40) return this->lcdControl;
+    if (address == 0xFF41) return this->lcdStatus;
+    if (address == 0xFF42) return this->SCY;
+    if (address == 0xFF43) return this->SCX;
+    if (address == 0xFF44) return this->line;
+    if (address == 0xFF45) return this->lyCompare;
+    if (address == 0xFF46) return INV_ADDR;
+    if (address == 0xFF47) return this->backgroundPalette;
+    if (address == 0xFF48) return this->spritePalette[0];
+    if (address == 0xFF49) return this->spritePalette[1];
+    if (address == 0xFF4A) return this->WY;
+    if (address == 0xFF4B) return this->WX;
+    if (address == 0xFF4C) return INV_ADDR;
+    if (address == 0xFF4D) return 0x0;
+    if (InRange(address, 0xFF4E, 0xFF4F)) return INV_ADDR;
+    if (address == 0xFF50) return this->bootRomEnabled;
+    if (InRange(address, 0xFF51, 0xFF6F)) return INV_ADDR;
+    if (address == 0xFF70) return this->wramBank;
+    if (InRange(address, 0xFF71, 0xFF7F)) return INV_ADDR;
+    return INV_ADDR;
 }
 
 int8_t Bus::readSigned(ui16 address)
@@ -126,12 +90,6 @@ int8_t Bus::readSigned(ui16 address)
     return static_cast<int8_t>(this->read(address));
 }
 
-/**
- * @brief Writes a byte to the specified address in the Bus memory.
- *
- * @param address The address to write the byte to.
- * @param value The value to write.
- */
 void Bus::writeByte(ui16 address, uint8_t value)
 {
     if (InRange(address, 0x0000, 0x7fff))
@@ -151,10 +109,15 @@ void Bus::writeByte(ui16 address, uint8_t value)
         this->mbc->write(address, value);
     }
 
-    else if (InRange(address, WORK_RAM_BASE, 0xDFFF))
+    else if (InRange(address, WORK_RAM_BASE, 0xCFFF))
     {
-        const int bankIndex = (lcdControl >> 3) & 1;
-        this->wram.write(address - WORK_RAM_BASE, bankIndex, value);
+        this->wram.write(address - WORK_RAM_BASE, 0, value);
+    }
+
+    else if (InRange(address, 0xD000, 0xDFFF))
+    {
+        this->wramBank = this->wramBank == 0 ? 1 : this->wramBank;
+        this->wram.write(address - WORK_RAM_BASE, this->wramBank, value);
     }
 
     else if (InRange(address, ECHO_RAM_BASE, 0xFDFF))
@@ -217,130 +180,35 @@ void Bus::writeWord(ui16 address, uint16_t value)
     writeByte(address + 1, value & 0xFF);
 }
 
-void Bus::ioWrite(uint32_t address, uint8_t value)
+void Bus::ioWrite(ui16 address, uint8_t value)
 {
-    // write to input
-    if (address == 0xFF00)
-    {
-        // Joypad register
-        this->joypadRegister = value;
-    }
-    // Serial data transfer
-    else if (address == 0xFF01)
-    {
-    }
-    // Serial data transfer controller
-    else if (address == 0xFF02)
-    {
-    }
-    // reset divider
-    else if (address == 0xFF04)
-    {
-        this->timer.resetDivider();
-    }
-    // Serial data transfer controller
-    else if (address == 0xFF05)
-    {
-        this->timer.setTimerControl(value);
-    }
-    // set timer modulo
-    else if (address == 0xFF06)
-    {
-        this->timer.setTimerModulo(value);
-    }
-    // set timer control
-    else if (address == 0xFF07)
-    {
-        this->timer.setTimerControl(value);
-    }
-    else if (address < 0xFF0F)
-    {
-        // unmapped
-    }
-    else if (address == 0xFF0F)
-    {
-        memcpy(&this->iFlags, &value, 1);
-    }
-    else if (address == 0xff26)
-    {
-        // write to sound on/off
-    }
-    else if (address == 0xFF40)
-    {
-        std::cout << "writing to lcd" << std::endl;
-        this->lcdControl = value;
-    }
-    else if (address == 0xFF42)
-    {
-        this->SCY = value;
-    }
-    else if (address == 0xFF43)
-    {
-        this->SCX = value;
-    }
-    else if (address == 0xFF46)
-    {
-        DMA_VALUE = value;
-    }
-    else if (address == 0xFF47)
-    {
-        bgpRegister = value;
-    }
-    else if (address == 0xFF4A)
-    {
-        this->WY = value;
-    }
-    else if (address == 0xFF4B)
-    {
-        this->WX = value;
-    }
-    else if (address == 0xFF50)
-    {
-        this->bootRomEnabled = value & 0x1;
-    }
-    else if (address == 0xFF68)
-    {
-        this->bgpIndex = (value & 0x3F);
-        this->autoIncrement = value >> 7;
-    }
-    else if (address == 0xFF6A)
-    {
-        this->obpIndex = (value & 0x3F);
-        this->autoIncrement = value >> 7;
-    }
-    else if (address >= 0xFF69 && address <= 0xFF6F)
-    {
-        return;
-        if (address % 2 == 0)
-        {
-            this->bgPaletteData[this->bgpIndex][0] = value;
-        }
-        else
-        {
-            this->bgPaletteData[this->bgpIndex][1] = value;
-        }
-
-        if (this->autoIncrement)
-        {
-            this->bgpIndex = (this->bgpIndex + 1) % 8;
-        }
-    }
-    else if (address >= 0xFF6A && address <= 0xFF6F)
-    {
-        if (address % 2 == 0)
-        {
-            this->objPaletteData[this->obpIndex][0] = value;
-        }
-        else
-        {
-            this->objPaletteData[this->obpIndex][1] = value;
-        }
-
-        if (this->autoIncrement)
-        {
-            this->obpIndex = (this->obpIndex + 1) % 8;
-        }
-    }
+    if (address == 0xFF00) this->joypadRegister = value;
+    else if (address == 0xFF01) this->serial.write(value);
+    else if (address == 0xFF02) this->serial.writeControl(value);
+    else if (address == 0xFF03) return;
+    else if (address == 0xFF04) this->timer.resetDivider();
+    else if (address == 0xFF05) this->timer.setTimerCounter(value);
+    else if (address == 0xFF06) this->timer.setTimerModulo(value);
+    else if (address == 0xFF07) this->timer.setTimerControl(value);
+    else if (InRange(address, 0xFF08, 0xFF0E))return;
+    else if (address == 0xFF0F) memcpy(&this->iFlags, &value, 1);
+    else if (InRange(address, 0xFF10, 0xFF3F)) return;
+    else if (address == 0xFF40) this->lcdControl = value;
+    else if (address == 0xFF41) this->lcdStatus = value;
+    else if (address == 0xFF42) this->SCY = value;
+    else if (address == 0xFF43) this->SCX = value;
+    else if (address == 0xFF44) this->line = value;
+    else if (address == 0xFF45) this->lyCompare = value;
+    else if (address == 0xFF46) this->dmaTransfer(value);
+    else if (address == 0xFF47) this->backgroundPalette = value;
+    else if (address == 0xFF48) this->spritePalette[0] = value;
+    else if (address == 0xFF49) this->spritePalette[1] = value;
+    else if (address == 0xFF4A) this->WY = value;
+    else if (address == 0xFF4B) this->WX = value;
+    else if (InRange(address, 0xFF4C, 0xFF4F)) return;
+    else if (address == 0xFF50) this->bootRomEnabled = value & 0x1;
+    else if (InRange(address, 0xFF51, 0xFF6F)) return;
+    else if (address == 0xFF70) this->wramBank = value & 0x03;
     else
     {
         std::cout << "write to unmapped io at address: " << address << std::endl;
@@ -350,7 +218,7 @@ void Bus::ioWrite(uint32_t address, uint8_t value)
 Bus::Bus(InterruptController* ic) : ic(ic)
 {
     this->ram.setSize(1, INTERNAL_RAM_SIZE);
-    this->wram.setSize(2, WORK_RAM_SIZE);
+    this->wram.setSize(8, WORK_RAM_SIZE);
     this->vram.setSize(2, VIDEO_RAM_SIZE);
     this->oam.setSize(1, OAM_SIZE);
     this->hram.setSize(1, HRAM_SIZE);
@@ -378,11 +246,6 @@ Bus::Bus(InterruptController* ic) : ic(ic)
         0x21, 0x04, 0x01, 0x11, 0xA8, 0x00, 0x1A, 0x13, 0xBE, 0x00, 0x00, 0x23, 0x7D, 0xFE, 0x34, 0x20,
         0xF5, 0x06, 0x19, 0x78, 0x86, 0x23, 0x05, 0x20, 0xFB, 0x86, 0x00, 0x00, 0x3E, 0x01, 0xE0, 0x50
     };
-
-    for(int i = 0xFF00; i <  HI_RAM_ADDR; ++i)
-    {
-        this->ioMap[i] = 0;
-    }
 }
 
 // todo: this needs to become part of a rom class
@@ -491,6 +354,20 @@ void Bus::createMBC()
     }
 }
 
+void Bus::dmaTransfer(const ui8 byte)
+{
+    const ui16 startAddress = byte * 0x100;
+
+    for (ui8 i = 0x0; i <= 0x9F; i++)
+    {
+        const ui16 fromAddress = startAddress + i;
+        const ui16 toAddress = OAM_ADDR + i;
+
+        const ui8 value = read(fromAddress);
+        this->writeByte(toAddress, value);
+    }
+}
+
 void Bus::loadRom(std::string path)
 {
     this->cartridge.load(path);
@@ -514,9 +391,4 @@ void Bus::loadPaletteData()
 
     // Load sprite palette data
     std::copy(romData.begin() + 0x6C, romData.begin() + 0x70, ioPorts + 0x6C);
-}
-
-void Bus::performDMA(uint8_t address)
-{
-    this->oam.write(address, 0, 160);
 }

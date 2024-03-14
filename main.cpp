@@ -14,7 +14,7 @@ int main()
     ISR isr(&ic, &ivt);
     GbCpu cpu(&bus, &ic, &isr);
     GbPPU ppu(&bus, &ic);
-    Clock clock(4.20, 8.40, &cpu, &ppu);
+    Clock clock(40.20, 80.40, &cpu, &ppu);
 
     cpu.reset();
     clock.start();

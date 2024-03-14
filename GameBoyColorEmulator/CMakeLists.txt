@@ -72,6 +72,7 @@ set(SOURCE_FILES
         Timer.h
         Timer.h
         PPU/Tile.hpp
+        Serial.h
 )
 
 # Create the library
