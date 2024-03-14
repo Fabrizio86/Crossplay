@@ -35,9 +35,16 @@ static constexpr size_t IO_ADDR = 0xFF00;
 static constexpr size_t HRAM_ADDR = 0xFF00;
 static constexpr size_t HI_RAM_ADDR = 0xFF80;
 static constexpr size_t INV_ADDR = 0xFF;
+static constexpr size_t LCD_STATUS_ADDR = 0xFF41;
+static constexpr size_t LY_COMPARE_ADDR = 0xFF45;
 
 static constexpr int MAX_SPRITES = 40;
 static constexpr int MBC_TYPE = 0x147;
+
+static constexpr int OAM_SEARCH_CYCLES = 80;
+static constexpr int VRAM_ACCESS_CYCLES = 172;
+static constexpr int CLOCKS_PER_SCANLINE = 456;
+
 
 typedef struct
 {
@@ -52,7 +59,14 @@ typedef struct
 
     ui8 toByte() const
     {
-        return (Unused3 << 7) | (Unused2 << 6) | (Unused1 << 5) | (Joypad << 4) | (Serial << 3) | (Timer << 2) | (LCD << 1) | VBlank;
+        return (Unused3 << 7) |
+            (Unused2 << 6) |
+            (Unused1 << 5) |
+            (Joypad << 4) |
+            (Serial << 3) |
+            (Timer << 2) |
+            (LCD << 1) |
+            VBlank;
     }
 
     void fromByte(const ui8 byte)
@@ -68,35 +82,32 @@ typedef struct
     }
 } InterruptFlags;
 
-// Timing constants (values are approximate and may need adjustment)
-static constexpr int H_BLANK_CYCLES = 204; // Number of cycles in H-Blank phase
-static constexpr int V_BLANK_CYCLES = 4560; // Number of cycles in V-Blank phase
-static constexpr int ACTIVE_RENDER_CYCLES = 70224; // Number of cycles in active rendering phase (includes mode 2 and 3)
-static constexpr int FRAME_CYCLES = ACTIVE_RENDER_CYCLES + V_BLANK_CYCLES; // Total number of cycles in one frame
+static constexpr int H_BLANK_CYCLES = 204;
+static constexpr int V_BLANK_CYCLES = 4560;
+static constexpr int ACTIVE_RENDER_CYCLES = 70224;
+static constexpr int FRAME_CYCLES = ACTIVE_RENDER_CYCLES + V_BLANK_CYCLES;
 
 static constexpr int SCANLINE_WIDTH = 160;
 static constexpr int SCANLINE_HEIGHT = 144;
 static constexpr int TILE_DIMENSION = 8;
 static constexpr int NUM_TILES_PER_ROW = SCANLINE_WIDTH / TILE_DIMENSION;
 
-static constexpr int WINDOW_X = 0; // Window X position on the screen
-static constexpr int WINDOW_Y = 0; // Window Y position on the screen
+static constexpr int WINDOW_X = 0;
+static constexpr int WINDOW_Y = 0;
 
 // Define display mode constants
-static constexpr uint8_t DISPLAY_MODE_VBLANK = 0x01; // Value indicating V-Blank mode
-static constexpr uint8_t DISPLAY_MODE_HBLANK = 0x00; // Value indicating H-Blank mode
+static constexpr uint8_t DISPLAY_MODE_VBLANK = 0x01;
+static constexpr uint8_t DISPLAY_MODE_HBLANK = 0x00;
 
 // Define interrupt flag constants
-static constexpr uint8_t INT_FLAG_VBLANK = 0x01; // Value indicating V-Blank interrupt flag
+static constexpr uint8_t INT_FLAG_VBLANK = 0x01;
 static constexpr uint16_t REG_IE_ADDRESS = 0xFFFF;
 static constexpr uint8_t INT_VBLANK_ENABLE = 0x01;
-static constexpr uint16_t DMA_SOURCE_ADDRESS = 0x8000; // Example static address for DMA transfer source
-static constexpr uint16_t WINDOW_TILE_MAP_ADDRESS = 0x9800; // Example address for window tile map
+static constexpr uint16_t DMA_SOURCE_ADDRESS = 0x8000;
+static constexpr uint16_t WINDOW_TILE_MAP_ADDRESS = 0x9800;
 
-// Define the number of colors in the palette
 static const int PALETTE_SIZE = 4;
 
-// Define the palette colors (example colors for the Game Boy Color)
 static const uint32_t palette[PALETTE_SIZE] = {
     0xFF686868, // Color 0: Dark gray
     0xFFA8A8A8, // Color 1: Light gray
@@ -116,6 +127,13 @@ struct OamEntry
     unsigned xflp : 1;
     unsigned yflp : 1;
     unsigned bgp : 1;
+};
+
+enum class VideoMode {
+    ACCESS_OAM,
+    ACCESS_VRAM,
+    HBLANK,
+    VBLANK,
 };
 
 #endif //CONSTS_H

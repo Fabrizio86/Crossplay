@@ -31,10 +31,10 @@ private:
     ScreenTiles tiles;
     int x = 0;
     int y = 0;
+    VideoMode mode = VideoMode::ACCESS_OAM;
+    ui8 lcdStatus;
 
     // todo: this section below needs to be redesigned, too messy
-
-    uint32_t cycles = 0;
 
     uint8_t currentScanline; // Current scanline being rendered
     uint8_t currentPixel; // Current pixel within the scanline

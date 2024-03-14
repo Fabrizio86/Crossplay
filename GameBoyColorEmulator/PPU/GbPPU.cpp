@@ -38,57 +38,98 @@ void GbPPU::displayToWindow()
 
 void GbPPU::exec()
 {
-    if (x < 20 && y < 18)
-        this->tiles.tiles[y][x].renderPixel();
+    this->lcdStatus = memory->read(LCD_STATUS_ADDR);
 
-    this->x++;
+    switch (this->mode)
+    {
+    case VideoMode::ACCESS_OAM:
+        if (this->x <= 8)
+        {
+            this->lcdStatus |= 3UL;
+            this->memory->writeByte(LCD_STATUS_ADDR, this->lcdStatus);
+            this->mode = VideoMode::ACCESS_VRAM;
+        }
+        break;
+    case VideoMode::ACCESS_VRAM:
+        if (this->x >= OAM_SEARCH_CYCLES + VRAM_ACCESS_CYCLES)
+        {
+            this->x = 0;
+            this->mode = VideoMode::HBLANK;
 
-    if (x == 20)
-    {
-        this->controller->requestInterrupt(InterruptType::HBlank);
-    }
-    else if (x == 32)
-    {
-        this->controller->clearInterrupt(InterruptType::HBlank);
-        x = 0;
-        y++;
+            if (this->lcdStatus & (1 << 3))
+            {
+                this->controller->requestInterrupt(InterruptType::HBlank);
+            }
+
+            bool lyCoincidence = this->memory->read(LY_COMPARE_ADDR) == this->y;
+
+            if ((this->lcdStatus & (1 << 6)) && lyCoincidence)
+            {
+                this->controller->requestInterrupt(InterruptType::LCD_STAT);
+            }
+
+            if (lyCoincidence)
+            {
+                this->lcdStatus |= (1 << 2);
+            }
+            else
+            {
+                this->lcdStatus &= ~(1 << 2);
+            }
+
+            this->lcdStatus &= ~3UL;
+        }
+        break;
+    case VideoMode::HBLANK:
+        if (++this->y == 144)
+        {
+            this->mode = VideoMode::VBLANK;
+        }
+        else
+        {
+            this->x = 0;
+            this->mode = VideoMode::ACCESS_OAM;
+        }
+        break;
+    case VideoMode::VBLANK:
+        if (this->x >= CLOCKS_PER_SCANLINE)
+        {
+            this->x %= CLOCKS_PER_SCANLINE;
+
+            if (++this->y == 154)
+            {
+                this->displayToWindow();
+                this->mode = VideoMode::ACCESS_OAM;
+                this->lcdStatus &= ~3UL;
+            }
+        }
+        break;
     }
 
-    if (y == 18)
+    if (this->y < 144 && this->x < 160)
     {
-        this->controller->requestInterrupt(InterruptType::VBlank);
+        this->tiles.tiles[this->y][this->x].renderPixel();
 
-        this->displayToWindow();
-    }
-    else if (y == 32)
-    {
-        y = 0;
-        this->controller->clearInterrupt(InterruptType::VBlank);
-    }
-
-    return;
-    // Increment the cycle count based on the system clock
-    this->cycles++;
-
-    // Check which GbPPU phase we are in based on the cycle count
-    // and execute the corresponding phase
-    if (this->cycles > 160)
-    {
-        this->hBlank();
-    }
-    else if (this->cycles < V_BLANK_CYCLES)
-    {
-        this->vBlank();
-    }
-    else
-    {
-        this->activeRendering();
+        if (this->x == 20)
+        {
+            this->controller->requestInterrupt(InterruptType::HBlank);
+        }
+        else if (this->x == 32)
+        {
+            this->controller->clearInterrupt(InterruptType::HBlank);
+            this->x = 0;
+            if (++this->y == 144)
+            {
+                this->controller->requestInterrupt(InterruptType::VBlank);
+                this->displayToWindow();
+            }
+        }
     }
 
-    // Reset the cycle count at the end of each frame
-    if (this->cycles >= FRAME_CYCLES)
+    if (++this->x == 456)
     {
-        this->cycles = 0;
+        this->x = 0;
+        this->mode = (this->y < 144) ? VideoMode::ACCESS_OAM : VideoMode::VBLANK;
     }
 }
 
