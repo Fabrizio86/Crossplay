@@ -108,7 +108,7 @@ static constexpr uint16_t WINDOW_TILE_MAP_ADDRESS = 0x9800;
 
 static const int PALETTE_SIZE = 4;
 
-static const uint32_t palette[PALETTE_SIZE] = {
+static const uint32_t Palette[PALETTE_SIZE] = {
     0xFF686868, // Color 0: Dark gray
     0xFFA8A8A8, // Color 1: Light gray
     0xFF101010, // Color 2: Black
@@ -127,9 +127,20 @@ struct OamEntry
     unsigned xFlip : 1;
     unsigned yFlip : 1;
     unsigned zIndex : 1;
+
+    void setFlags(ui8 attr)
+    {
+        this->paletteNumber = attr & 0x7;
+        this->tileVramBank = attr & 0x8;
+        this->nonPaletteNumber = attr & 0x10;
+        this->xFlip = attr & 0x20;
+        this->yFlip = attr & 0x40;
+        this->zIndex = attr & 0x80;
+    }
 };
 
-enum class VideoMode {
+enum class VideoMode
+{
     ACCESS_OAM,
     ACCESS_VRAM,
     HBLANK,

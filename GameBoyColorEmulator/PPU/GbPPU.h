@@ -14,7 +14,7 @@
 #include "../../Definitions.h"
 
 #include "LcdControl.h"
-#include "Tile.hpp"
+#include "../Consts.h"
 
 class GbPPU : public IPPU
 {
@@ -28,11 +28,12 @@ public:
 private:
     IMemory* memory;
     ScreenBuffer screenBuffer;
-    ScreenTiles tiles;
     int x = 0;
     int y = 0;
+
     VideoMode mode = VideoMode::ACCESS_OAM;
     ui8 lcdStatus;
+    OamEntry oams[40];
 
     // todo: this section below needs to be redesigned, too messy
 
@@ -47,30 +48,7 @@ private:
 
     InterruptController* controller;
 
-    // Define methods for different GbPPU phases
-    void hBlank();
-
-    void vBlank();
-
-    void activeRendering();
-
-
-    void updateInternalRegisters();
-
-    void checkForInterrupts();
-
-    void performDMA();
-
-    void backgroundProcessing();
-
-    void synchronizeWithOtherComponents();
-
-    void renderPixel(uint8_t tileData, int tilePixelX, int tilePixelY, int screenX, int screenY);
-
-    uint8_t getColorFromPalette(int index);
-
-    void renderSprites();
-
+    void renderPixel(int y, int x);
     void displayToWindow();
 };
 
