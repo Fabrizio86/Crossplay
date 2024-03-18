@@ -117,16 +117,16 @@ static const uint32_t palette[PALETTE_SIZE] = {
 
 struct OamEntry
 {
-    uint8_t y;
-    uint8_t x;
-    uint8_t tile;
+    ui8 x;
+    ui8 y;
+    ui8 tile;
 
-    unsigned cgbPn : 3;
-    unsigned cgbVramBank : 1;
-    unsigned pn : 1;
-    unsigned xflp : 1;
-    unsigned yflp : 1;
-    unsigned bgp : 1;
+    unsigned paletteNumber : 3;
+    unsigned tileVramBank : 1;
+    unsigned nonPaletteNumber : 1;
+    unsigned xFlip : 1;
+    unsigned yFlip : 1;
+    unsigned zIndex : 1;
 };
 
 enum class VideoMode {

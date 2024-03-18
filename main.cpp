@@ -8,13 +8,15 @@ int main()
     Hardware* hardware;
     InterruptController ic;
     Bus bus(&ic);
+    DMA dma(&bus);
+    bus.setDma(&dma);
     bus.loadRom("/Users/fabriziopaino/Crossplay/PR.gb");
 
     InterruptVectorTable ivt(&bus);
     ISR isr(&ic, &ivt);
-    GbCpu cpu(&bus, &ic, &isr);
+    GbCpu cpu(&bus, &ic, &isr, &dma);
     GbPPU ppu(&bus, &ic);
-    Clock clock(4.20, 4.20, &cpu, &ppu);
+    Clock clock(4.20, 8.40, &cpu, &ppu);
 
     cpu.reset();
     clock.start();

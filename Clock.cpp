@@ -64,8 +64,8 @@ void Clock::start()
 
 Clock::Clock(double cpuFreqMHz, double ppuFreqMHz, ICpu* cpu, IPPU* ppu) : cpu(cpu), ppu(ppu)
 {
-    this->cpuFreq = 1.0 / cpuFreqMHz * 1e6;
-    this->ppuFreq = 1.0 / ppuFreqMHz * 1e6;
+    this->cpuFreq = (1.0 / cpuFreqMHz) * 1e6;
+    this->ppuFreq = (1.0 / ppuFreqMHz) * 1e6;
 }
 
 void Clock::stop()

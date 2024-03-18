@@ -14,8 +14,7 @@
 #include "Consts.h"
 #include "Interrupts/InterruptController.h"
 
-#include <string>
-
+#include "DMA/DMA.h"
 #include "Serial.h"
 #include "Timer.h"
 #include "Cartridges/Cartridge.h"
@@ -40,6 +39,8 @@ public:
 
     void loadRom(std::string path);
 
+    void setDma(DMA* dma);
+
 private:
     bool ramEnabled;
     bool bootRomEnabled;
@@ -56,6 +57,7 @@ private:
     Memory hram;
     Timer timer;
     Serial serial;
+    DMA* dma;
 
     std::array<ui8, 256> bootRom;
     InterruptFlags iFlags;
@@ -89,8 +91,6 @@ private:
     void loadPaletteData();
 
     void createMBC();
-
-    void dmaTransfer(const ui8 byte);
 };
 
 

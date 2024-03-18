@@ -17,7 +17,7 @@
 class GbCpu : public ICpu
 {
 public:
-    GbCpu(IMemory* memory, InterruptController* ic, ISR* isr);
+    GbCpu(IMemory* memory, InterruptController* ic, ISR* isr, DMA* dma);
 
     ~GbCpu() override = default;
 
@@ -29,6 +29,7 @@ private:
     bool stopped;
     bool halted;
 
+    DMA* dma;
     Instruction opcode;
     std::array<OpcodeHandler, 256> opCodes;
     std::array<OpcodeHandler, 256> prefixCbOpcodes;

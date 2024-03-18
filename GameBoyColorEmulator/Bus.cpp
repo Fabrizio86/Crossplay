@@ -37,7 +37,7 @@ uint8_t Bus::read(ui16 address)
         return this->wram.read(address - WORK_RAM_BASE, this->wramBank);
     }
     else if (InRange(address, ECHO_RAM_BASE, 0xFDFF)) return this->read(address - 0x2000);
-    else if (InRange(address, OAM_ADDR, 0xFE9F)) return this->oam.read(address - OAM_ADDR, 0);
+    else if (InRange(address, OAM_ADDR, 0xFE9F)) return this->dma->inProgress() ? INV_ADDR : this->oam.read(address - OAM_ADDR, 0);
     else if (InRange(address, FORBIDDEN_ADDR, 0xFEFF))return INV_ADDR;
     else if (InRange(address, IO_ADDR, 0xFF7F)) return this->ioRead(address);
     else if (InRange(address, HI_RAM_ADDR, 0xFFFE)) return this->hram.read(address - 0xFF80, 0);
@@ -127,6 +127,7 @@ void Bus::writeByte(ui16 address, uint8_t value)
     // write to oam
     else if (InRange(address, OAM_ADDR, 0xFE9F))
     {
+        if(this->dma->inProgress()) return;
         this->oam.write(address - OAM_ADDR, 0, value);
     }
 
@@ -196,9 +197,9 @@ void Bus::ioWrite(ui16 address, uint8_t value)
     else if (address == LCD_STATUS_ADDR) this->lcdStatus = value;
     else if (address == 0xFF42) this->SCY = value;
     else if (address == 0xFF43) this->SCX = value;
-    else if (address == 0xFF44) this->line = value;
+    else if (address == 0xFF44) this->line = 0x0;
     else if (address == 0xFF45) this->lyCompare = value;
-    else if (address == 0xFF46) this->dmaTransfer(value);
+    else if (address == 0xFF46) this->dma->start(value);
     else if (address == 0xFF47) this->backgroundPalette = value;
     else if (address == 0xFF48) this->spritePalette[0] = value;
     else if (address == 0xFF49) this->spritePalette[1] = value;
@@ -353,26 +354,17 @@ void Bus::createMBC()
     }
 }
 
-void Bus::dmaTransfer(const ui8 byte)
-{
-    const ui16 startAddress = byte * 0x100;
-
-    for (ui8 i = 0x0; i <= 0x9F; i++)
-    {
-        const ui16 fromAddress = startAddress + i;
-        const ui16 toAddress = OAM_ADDR + i;
-
-        const ui8 value = read(fromAddress);
-        this->writeByte(toAddress, value);
-    }
-}
-
 void Bus::loadRom(std::string path)
 {
     this->cartridge.load(path);
 
     this->createMBC();
     this->loadPaletteData();
+}
+
+void Bus::setDma(DMA* dma)
+{
+    this->dma = dma;
 }
 
 void Bus::loadPaletteData()

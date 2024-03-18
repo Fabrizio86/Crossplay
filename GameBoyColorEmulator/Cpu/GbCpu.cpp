@@ -29,14 +29,15 @@ void GbCpu::exec()
     opcode = static_cast<Instruction>(this->memory->read(this->registers.regPC++));
 
     opCodes[opcode]();
-        printf("%d - SP: %x PC: %x Opcode: %x, Flag: %d RegA: %x RegH: %x\n",
-               i,
-               this->registers.regSP,
-               registers.regPC,
-               opcode,
-               this->registers.regF.zero,
-               this->registers.regA,
-               this->registers.regH);
+    /*printf("%d - SP: %x PC: %x Opcode: %x, Flag: %d RegA: %x RegH: %x\n",
+           this->registers.regSP,
+           registers.regPC,
+           opcode,
+           this->registers.regF.zero,
+           this->registers.regA,
+           this->registers.regH);*/
+
+    this->dma->exec();
 }
 
 void GbCpu::reset()
@@ -64,7 +65,8 @@ void GbCpu::restoreState()
     this->registers = this->savedRegisters;
 }
 
-GbCpu::GbCpu(IMemory* memory, InterruptController* ic, ISR* isr) :
+GbCpu::GbCpu(IMemory* memory, InterruptController* ic, ISR* isr, DMA* dma) :
+    dma(dma),
     memory(memory),
     interruptController(ic),
     isr(isr)

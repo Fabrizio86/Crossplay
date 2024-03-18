@@ -38,6 +38,7 @@ void GbPPU::displayToWindow()
 
 void GbPPU::exec()
 {
+    //printf("X: %d, Y: %d\n", this->x, this->y);
     this->lcdStatus = memory->read(LCD_STATUS_ADDR);
 
     switch (this->mode)
@@ -50,7 +51,11 @@ void GbPPU::exec()
             this->mode = VideoMode::ACCESS_VRAM;
         }
         break;
+
     case VideoMode::ACCESS_VRAM:
+        // this->tiles.tiles[this->y][this->x].renderPixel();
+        // printf("X: %d, Y: %d\n", this->x, this->y);
+
         if (this->x >= OAM_SEARCH_CYCLES + VRAM_ACCESS_CYCLES)
         {
             this->x = 0;
@@ -84,20 +89,27 @@ void GbPPU::exec()
         if (++this->y == 144)
         {
             this->mode = VideoMode::VBLANK;
+            this->displayToWindow();
+            this->controller->requestInterrupt(InterruptType::VBlank);
         }
         else
         {
+            // this->tiles.tiles[this->y][this->x].renderPixel();
+            //printf("X: %d, Y: %d\n", this->x, this->y);
             this->x = 0;
             this->mode = VideoMode::ACCESS_OAM;
         }
         break;
     case VideoMode::VBLANK:
+        printf("X: %d, Y: %d\n", this->x, this->y);
         if (this->x >= CLOCKS_PER_SCANLINE)
         {
             this->x %= CLOCKS_PER_SCANLINE;
 
             if (++this->y == 154)
             {
+                this->y = 0;
+                this->x = 0;
                 this->displayToWindow();
                 this->mode = VideoMode::ACCESS_OAM;
                 this->lcdStatus &= ~3UL;
@@ -106,31 +118,7 @@ void GbPPU::exec()
         break;
     }
 
-    if (this->y < 144 && this->x < 160)
-    {
-        this->tiles.tiles[this->y][this->x].renderPixel();
-
-        if (this->x == 20)
-        {
-            this->controller->requestInterrupt(InterruptType::HBlank);
-        }
-        else if (this->x == 32)
-        {
-            this->controller->clearInterrupt(InterruptType::HBlank);
-            this->x = 0;
-            if (++this->y == 144)
-            {
-                this->controller->requestInterrupt(InterruptType::VBlank);
-                this->displayToWindow();
-            }
-        }
-    }
-
-    if (++this->x == 456)
-    {
-        this->x = 0;
-        this->mode = (this->y < 144) ? VideoMode::ACCESS_OAM : VideoMode::VBLANK;
-    }
+    this->x++;
 }
 
 void GbPPU::hBlank()
