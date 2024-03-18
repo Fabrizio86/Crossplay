@@ -33,7 +33,7 @@ private:
 
     VideoMode mode = VideoMode::ACCESS_OAM;
     ui8 lcdStatus;
-    OamEntry oams[40];
+    OamEntry* oamGrid[144][160] = {{ nullptr }};
 
     // todo: this section below needs to be redesigned, too messy
 
@@ -48,6 +48,7 @@ private:
 
     InterruptController* controller;
 
+    int getSpritePixelColor(OamEntry sprite, int sprite_x, int sprite_y);
     void renderPixel(int y, int x);
     void displayToWindow();
 };

@@ -50,17 +50,33 @@ void GbPPU::exec()
         }
         else
         {
-            int oamIndex = this->x / 2; // 2 OAM entries per dot
-
-            OamEntry& entry = oams[oamIndex];
+            int oamIndex = this->x / 2;
+            int oamByteIndex = oamIndex * 4;
+            int width = 8;
+            int height = 16;
+            OamEntry entry;
 
             if ((this->x % 2) == 0)
             {
-                entry.y = this->memory->read(OAM_ADDR + oamIndex);
-                entry.x = this->memory->read(OAM_ADDR + oamIndex + 1);
-                entry.tile = this->memory->read(OAM_ADDR + oamIndex + 2);
-                entry.setFlags(this->memory->read(OAM_ADDR + oamIndex + 3));
-                printf("X: %d, Y: %d, Tile: %d\n", entry.x, entry.y, entry.tile);
+                entry.y = this->memory->read(OAM_ADDR + oamByteIndex);
+                entry.x = this->memory->read(OAM_ADDR + oamByteIndex + 1);
+                entry.tile = this->memory->read(OAM_ADDR + oamByteIndex + 2);
+                entry.setFlags(this->memory->read(OAM_ADDR + oamByteIndex + 3));
+
+                for (int yOffset = 0; yOffset < height; ++yOffset)
+                {
+                    for (int xOffset = 0; xOffset < width; ++xOffset)
+                    {
+                        int xCopy = entry.x - width + xOffset;
+                        int yCopy = entry.y - height + yOffset;
+
+                        // Check bounds
+                        if (xCopy >= 0 && xCopy < SCANLINE_WIDTH && yCopy >= 0 && yCopy < SCANLINE_HEIGHT)
+                        {
+                            oamGrid[yCopy][xCopy] = &entry;
+                        }
+                    }
+                }
             }
         }
         break;
@@ -135,51 +151,54 @@ void GbPPU::exec()
     this->x++;
 }
 
+int GbPPU::getSpritePixelColor(OamEntry sprite, int sprite_x, int sprite_y)
+{
+    // Assuming bus is your memory bus object that can read from memory
+    ui16 tileDataAddr = sprite.tileVramBank ? 0x8000 : 0x9000;
+    tileDataAddr += sprite.tile * 16; // Each tile takes up 16 byte
+
+    // In each tile, each line takes two bytes so we need to add 'y' multiplied by 2
+    tileDataAddr += y * 2;
+
+    // Now we have the address of the line of the tile. We need to read the bytes for tile line.
+    ui8 highByte = this->memory->read(tileDataAddr);
+    ui8 lowByte = this->memory->read(tileDataAddr + 1);
+
+    // Get the color index for the pixel by combining the bits at the x-th position from both bytes
+    int colorIndex = (((highByte >> (7 - x)) & 1) << 1) | ((lowByte >> (7 - x)) & 1);
+
+    colorIndex = sprite.paletteNumber ? colorIndex : 0;
+    int finalColor = Palette[colorIndex];
+
+    return finalColor;
+}
+
 void GbPPU::renderPixel(int y, int x)
 {
-    OamEntry entry = this->oams[20];
+    OamEntry* sprite = oamGrid[y][x];
 
-    for (OamEntry& sprite : this->oams)
+    if (sprite != nullptr)
     {
-         //printf("Tile color: %d\n", sprite.paletteNumber);
+        int spriteX = x - (sprite->x - 8);
+        int spriteY = y - (sprite->y - 16);
 
-        // Check for sprite that contains the pixel
-        if (sprite.x == x &&
-            sprite.y == y)
+        if (sprite->xFlip)
         {
-            //entry = sprite;
-            break;
+            spriteX = 7 - spriteX;
         }
+        if (sprite->yFlip)
+        {
+            spriteY = 15 - spriteY;
+        }
+
+        // Get color of the pixel
+        int color = getSpritePixelColor(*sprite, spriteX, spriteY);
+
+        // Apply color to the current pixel on screen. Assume that `screen` is your screen buffer.
+        screenBuffer[y][x] = color;
     }
-
-    //printf("Tile color: %d\n", entry.paletteNumber);
-
-    int relativeX = x - entry.x;
-    int relativeY = y - entry.y;
-
-    if (entry.xFlip)
+    else
     {
-        relativeX = 8 - 1 - relativeX;
+        screenBuffer[y][x] = Palette[3];
     }
-    if (entry.yFlip)
-    {
-        relativeY = 8 - 1 - relativeY;
-    }
-
-    ui8 tileIndex = entry.tile;
-    ui16 address = VRAM_ADDRESS + (tileIndex * 2) + (relativeY * 2);
-    ui8 pixelColorIndex = (this->memory->read(address) >> ((7 - relativeX) * 2)) & 0b11;
-
-    if (entry.nonPaletteNumber)
-    {
-        pixelColorIndex += entry.paletteNumber * PALETTE_SIZE;
-    }
-
-    this->screenBuffer[y][x] = Palette[entry.paletteNumber];
-
-    /*ui8 tileIndex = this->memory->read(VRAM_ADDRESS + (y / 8 * 32 + x / 8));
-    ui8 pixelColorIndex = (this->memory->read(tileIndex * 16 + (y%8) * 2) >> ((7 - (x%8)) * 2)) & 0b11;
-
-    printf("X: %d, Y: %d\n", this->x, this->y);
-    this->screenBuffer[y][x] = Palette[pixelColorIndex];*/
 }
