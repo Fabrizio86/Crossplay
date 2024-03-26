@@ -27,11 +27,11 @@ void DMA::exec()
         return;
     }
 
-    const ui8 newVal = this->memory->read(this->value * 0x100 + this->byte++);
+    const ui8 newVal = this->memory->read(this->value * 0x100 + this->byte);
     this->memory->writeByte(OAM_ADDR + this->byte, newVal);
-    this->active = this->byte < 0xA0;
 
-    printf("dma in progress\n");
+    this->byte++;
+    this->active = this->byte < 0xA0;
 }
 
 bool DMA::inProgress() const

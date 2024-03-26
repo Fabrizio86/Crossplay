@@ -33,7 +33,8 @@ private:
 
     VideoMode mode = VideoMode::ACCESS_OAM;
     ui8 lcdStatus;
-    OamEntry* oamGrid[144][160] = {{ nullptr }};
+    LcdControl lcdControl;
+    OamEntry oamGrid[144][160];
 
     // todo: this section below needs to be redesigned, too messy
 
@@ -51,6 +52,7 @@ private:
     int getSpritePixelColor(OamEntry sprite, int sprite_x, int sprite_y);
     void renderPixel(int y, int x);
     void displayToWindow();
+    void OamProcessing();
 };
 
 

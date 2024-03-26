@@ -34,6 +34,52 @@ void GbPPU::displayToWindow()
     window->display();
 }
 
+void GbPPU::OamProcessing()
+{
+    if (this->x >= 80)
+    {
+        this->lcdStatus |= 3UL;
+        this->memory->writeByte(LCD_STATUS_ADDR, this->lcdStatus);
+        this->mode = VideoMode::ACCESS_VRAM;
+        x = 0;
+    }
+    else
+    {
+        int oamIndex = this->x / 2;
+        int oamByteIndex = oamIndex * 2;
+        int width = 8;
+        int height = 16;
+
+        OamEntry& entry = this->oamGrid[y][x];
+
+        if ((this->x % 2) == 0)
+        {
+            entry.y = this->memory->read(OAM_ADDR + oamByteIndex);
+            entry.x = this->memory->read(OAM_ADDR + oamByteIndex + 1);
+        }
+        else
+        {
+            entry.tile = this->memory->read(OAM_ADDR + oamByteIndex);
+            entry.setFlags(this->memory->read(OAM_ADDR + oamByteIndex + 1));
+
+            for (int yOffset = 0; yOffset < height; ++yOffset)
+            {
+                for (int xOffset = 0; xOffset < width; ++xOffset)
+                {
+                    int xCopy = entry.x - width + xOffset;
+                    int yCopy = entry.y - height + yOffset;
+
+                    // Check bounds
+                    if (xCopy >= 0 && xCopy < SCANLINE_WIDTH && yCopy >= 0 && yCopy < SCANLINE_HEIGHT)
+                    {
+                        this->oamGrid[yCopy][xCopy] = entry;
+                    }
+                }
+            }
+        }
+    }
+}
+
 void GbPPU::exec()
 {
     this->lcdStatus = memory->read(LCD_STATUS_ADDR);
@@ -41,50 +87,13 @@ void GbPPU::exec()
     switch (this->mode)
     {
     case VideoMode::ACCESS_OAM:
-        if (this->x >= 80)
-        {
-            this->lcdStatus |= 3UL;
-            this->memory->writeByte(LCD_STATUS_ADDR, this->lcdStatus);
-            this->mode = VideoMode::ACCESS_VRAM;
-            x = 0;
-        }
-        else
-        {
-            int oamIndex = this->x / 2;
-            int oamByteIndex = oamIndex * 4;
-            int width = 8;
-            int height = 16;
-            OamEntry entry;
-
-            if ((this->x % 2) == 0)
-            {
-                entry.y = this->memory->read(OAM_ADDR + oamByteIndex);
-                entry.x = this->memory->read(OAM_ADDR + oamByteIndex + 1);
-                entry.tile = this->memory->read(OAM_ADDR + oamByteIndex + 2);
-                entry.setFlags(this->memory->read(OAM_ADDR + oamByteIndex + 3));
-
-                for (int yOffset = 0; yOffset < height; ++yOffset)
-                {
-                    for (int xOffset = 0; xOffset < width; ++xOffset)
-                    {
-                        int xCopy = entry.x - width + xOffset;
-                        int yCopy = entry.y - height + yOffset;
-
-                        // Check bounds
-                        if (xCopy >= 0 && xCopy < SCANLINE_WIDTH && yCopy >= 0 && yCopy < SCANLINE_HEIGHT)
-                        {
-                            oamGrid[yCopy][xCopy] = &entry;
-                        }
-                    }
-                }
-            }
-        }
+        this->OamProcessing();
         break;
 
     case VideoMode::ACCESS_VRAM:
         if (this->x <= 160)
         {
-            this->renderPixel(y, x);
+            this->renderPixel(y, x - 1);
         }
 
         if (this->x >= 172)
@@ -151,6 +160,7 @@ void GbPPU::exec()
     this->x++;
 }
 
+
 int GbPPU::getSpritePixelColor(OamEntry sprite, int sprite_x, int sprite_y)
 {
     // Assuming bus is your memory bus object that can read from memory
@@ -175,30 +185,25 @@ int GbPPU::getSpritePixelColor(OamEntry sprite, int sprite_x, int sprite_y)
 
 void GbPPU::renderPixel(int y, int x)
 {
-    OamEntry* sprite = oamGrid[y][x];
+    OamEntry& sprite = oamGrid[y][x];
+    //this->lcdControl.fromByte(this->memory->read(0xFF40));
 
-    if (sprite != nullptr)
-    {
-        int spriteX = x - (sprite->x - 8);
-        int spriteY = y - (sprite->y - 16);
+        printf("X: %d, Y: %d, Sprite X: %d, Sprite Y: %d....\n", x, y, sprite.x, sprite.y);
+        int spriteX = x - (sprite.x - 8);
+        int spriteY = y - (sprite.y - 16);
 
-        if (sprite->xFlip)
+        if (sprite.xFlip)
         {
             spriteX = 7 - spriteX;
         }
-        if (sprite->yFlip)
+        if (sprite.yFlip)
         {
             spriteY = 15 - spriteY;
         }
 
         // Get color of the pixel
-        int color = getSpritePixelColor(*sprite, spriteX, spriteY);
+        int color = getSpritePixelColor(sprite, spriteX, spriteY);
 
         // Apply color to the current pixel on screen. Assume that `screen` is your screen buffer.
         screenBuffer[y][x] = color;
-    }
-    else
-    {
-        screenBuffer[y][x] = Palette[3];
-    }
 }
